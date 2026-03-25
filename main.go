@@ -1,245 +1,103 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
-	"flag"
 	"fmt"
-	"log"
-	"net/http"
-	"os"
-	"path"
-	"websocket-server/auth"
-	"websocket-server/herenow"
-	"websocket-server/websocket"
+    "log"
+    "os"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+    "github.com/spf13/cobra"
 
-	"github.com/shirou/gopsutil/v3/disk"
-	"github.com/shirou/gopsutil/v3/mem"
+    "websocket-server/config"
+    "websocket-server/server"
+    "websocket-server/db"
 )
 
-type Callback func([]string) int
+var (
+    flagPort            int
+    flagModule          string
+	flagCreateIfMissing bool
+	flagCreateAdmin     bool
+)
 
-type Command struct {
-	f    Callback
-	args string
-	help string
+// Root command
+var rootCmd = &cobra.Command{
+    Use:   os.Args[0] + " [command]",
+    Short: "Ekhoes Server",
+    Long:  "CLI to start and manage Ekhoes Server.",
+	Version: config.Version,
+    PersistentPreRun: func(cmd *cobra.Command, args []string) {
+        config.Init()
+
+        if flagPort != 0 {
+            config.Conf.Port = flagPort
+        }
+    },
+	
+    // -> Put here code to be executed without commands <-
 }
 
-var flagVersion = false
+var startCmd = &cobra.Command{
+    Use:   "start",
+    Short: "Start server",
+    RunE: func(cmd *cobra.Command, args []string) error {
 
-func getRoot(w http.ResponseWriter, r *http.Request) {
+        if config.Local() && flagCreateIfMissing {
+            log.Printf("Checking database '%s'...", flagModule)
 
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+            if !db.CheckLocal(flagModule) {
+                log.Printf("Creating database '%s'...", flagModule)
 
-	//fmt.Printf("%s: %s %s %s\n", r.RemoteAddr, r.UserAgent(), r.Method, r.URL)
-	//io.WriteString(w, "This is my website!\n")
+                if err := db.CreateLocal(flagModule); err != nil {
+                    log.Fatal(err)
+                }
 
-	response, _ := json.Marshal(conf.Package)
+                if err := db.OpenAndInit(flagModule, flagCreateAdmin); err != nil {
+                    log.Fatal(err)
+                }
+            }
+        }
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+        // Manteniamo la semantica: Start([]string) int -> exit code
+        exitCode := server.Start()
+        if exitCode != 0 {
+            os.Exit(exitCode)
+        }
+        return nil
+    },
 }
 
-type Host struct {
-	Mem  *mem.VirtualMemoryStat
-	Disk *disk.UsageStat
+var initCmd = &cobra.Command{
+    Use:   "init",
+    Short: "Initializes a module",
+    RunE: func(cmd *cobra.Command, args []string) error {
+        err := db.OpenAndInit(flagModule, flagCreateAdmin)
+        if err != nil {
+			fmt.Println(err)
+            os.Exit(1)
+        }
+        return nil
+    },
 }
 
-func getMetrics(w http.ResponseWriter, r *http.Request) {
+func init() {
+    //log.SetFlags(log.Ldate | log.Ltime)
 
-	metrics := map[string]interface{}{
-		"count": websocket.GetConnectionsCount(),
-	}
+	rootCmd.PersistentFlags().BoolVarP(&config.Runtime.Local, "local", "l", false, "Use local database")
+	rootCmd.SetVersionTemplate(`{{.Version}}`)
+    rootCmd.AddCommand(startCmd)
+    rootCmd.AddCommand(initCmd)
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(metrics)
-}
-
-func DynamicCORSMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		origin := r.Header.Get("Origin")
-
-		if origin != "" {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token")
-			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Vary", "Origin")
-		}
-
-		// Preflight
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-/**
- * Start service
- */
-func Start(args []string) int {
-
-	fmt.Printf("\n   *** %s %s ***\n\n", conf.Package.Name, conf.Package.Version)
-
-	if !herenow.Init() {
-		return 1
-	}
-
-	log.Printf("Starting service on port %d...\n", conf.Port)
-
-	r := chi.NewRouter()
-
-	r.Use(middleware.Logger)
-	r.Use(DynamicCORSMiddleware)
-
-	// Static routes
-	r.Get("/", getRoot)
-	r.Get("/metrics", getMetrics)
-	r.Post("/login", auth.Login)
-	r.Post("/logout", auth.Logout)
-
-	r.Get("/sessions", auth.GetSessionsHandler)
-	r.Delete("/session/{id}", auth.DeleteSessionHandler)
-	r.Delete("/sessions", auth.DeleteAllSessionsHandler)
-
-	// Alternative: method prefix syntax (chi supports it too)
-	r.Method("GET", "/connect", http.HandlerFunc(websocket.HandleConnection))
-	r.Get("/connections", websocket.GetConnectionsHandler)
-
-	// /hotspot routes
-	r.Route("/hotspot", func(r chi.Router) {
-		// GET /hotspot
-		r.Get("/", herenow.GetHotspot)
-
-		// POST /hotspot
-		r.Post("/", herenow.PostHotspot)
-
-		// Routes with /hotspot/{id}
-		r.Route("/{id}", func(r chi.Router) {
-			// GET /hotspot/{id}
-			r.Get("/", herenow.GetHotspot)
-
-			// PUT /hotspot/{id}
-			r.Put("/", herenow.PutHotspot)
-
-			// DELETE /hotspot/{id}
-			r.Delete("/", herenow.DeleteHotspot)
-
-			// POST/DELETE /hotspot/{id}/like
-			r.Post("/like", herenow.LikeHotspot)
-			r.Delete("/like", herenow.LikeHotspot)
-
-			// POST /hotspot/{id}/clone
-			r.Post("/clone", herenow.CloneHotspotHandler)
-
-			// POST/DELETE /hotspot/{id}/subscription
-			r.Post("/subscription", herenow.SubscribeUnsubscribeHandler)
-			r.Delete("/subscription", herenow.SubscribeUnsubscribeHandler)
-
-			// POST /hotspot/{id}/comment
-			r.Get("/comments", herenow.GetCommentsHandler)
-
-			// POST /hotspot/{id}/comment
-			r.Post("/comment", herenow.PostHotspotCommentHandler)
-
-			// DELETE /hotspot/{id}/comment/{commentId}
-			r.Delete("/comment/{commentId}", herenow.DeleteHotspotCommentHandler)
-		})
-	})
-
-	r.Get("/categories", herenow.GetCategoriesHandler)
-	r.Get("/mysubscriptions", herenow.GetMySubscriptions)
-	r.Get("/search", herenow.SearchHandler)
-
-	addr := fmt.Sprintf(":%d", conf.Port)
-
-	log.Printf("Service ready\n")
-
-	err := http.ListenAndServe(addr, r)
-
-	if errors.Is(err, http.ErrServerClosed) {
-		fmt.Printf("server closed\n")
-	} else if err != nil {
-		fmt.Printf("error starting server: %s\n", err)
-		os.Exit(1)
-	}
-
-	return 0
+    startCmd.Flags().IntVarP(&flagPort, "port", "p", 9876, "Set server port")
+	startCmd.Flags().BoolVarP(&flagCreateIfMissing, "create-if-missing", "C", false, "Create local database if not exists")
+	startCmd.Flags().BoolVarP(&flagCreateAdmin, "create-admin", "A", false, "Create default admin user")
+    
+    initCmd.Flags().StringVarP(&flagModule, "module", "m", "ekhoes", "Module to be initialized")
+	initCmd.Flags().BoolVarP(&flagCreateAdmin, "create-admin", "A", false, "Create default admin user")
 }
 
 func main() {
-
-	Init()
-
-	if os.Getenv("API_DB_PASSWORD") != "" {
-		conf.DB.Password = os.Getenv("API_DB_PASSWORD")
-	}
-
-	//globals.Home, _ = filepath.Abs(path.Dir(os.Args[0]))
-
-	mapCommands := make(map[string]Command)
-	mapCommands["start"] = Command{Start, "", "Start service"}
-
-	flag.BoolVar(&flagVersion, "v", false, "Show version")
-	flag.IntVar(&conf.Port, "P", 9876, "Set server port")
-
-	flag.Usage = func() {
-		fmt.Printf("%s %s\n", path.Base(os.Args[0]), conf.Package.Version)
-		fmt.Printf("Usage: %s [options] command [arguments]\n", path.Base(os.Args[0]))
-
-		fmt.Println("\nCommands:")
-
-		for key, element := range mapCommands {
-			fmt.Printf("  %-8s %-10s %s\n", key, element.args, element.help)
-		}
-
-		fmt.Println("\nOptions:")
-
-		flag.VisitAll(func(f *flag.Flag) {
-			a, d := "", ""
-
-			if f.Value.String() != "false" {
-				d = "(default: " + f.Value.String() + ")"
-				a = "<value>"
-			}
-			fmt.Printf("  -%s %-10s %s %s\n", f.Name, a, f.Usage, d) // f.Name, f.Value
-		})
-	}
-
-	flag.Parse()
-
-	if flagVersion {
-		fmt.Println(conf.Package.Version)
-	}
-
-	args := flag.Args()
-
-	if len(args) == 0 {
-		os.Exit(0)
-	}
-
-	var exitValue int = 0
-
-	if c, found := mapCommands[args[0]]; found {
-		exitValue = c.f(args)
-	} else {
-		fmt.Fprintln(os.Stderr, "Unknown command: ", args[0])
-		exitValue = 1
-	}
-
-	os.Exit(exitValue)
+    if err := rootCmd.Execute(); err != nil {
+        // Cobra normalmente stampa già l'errore; usiamo log.Fatal come fallback.
+        log.Fatal(err)
+    }
 }

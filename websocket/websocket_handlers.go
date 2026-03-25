@@ -4,24 +4,27 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"time"
+	"fmt"
 
 	"log"
 
 	"websocket-server/auth"
 	"websocket-server/db"
-	"websocket-server/herenow"
+	"websocket-server/terminal"
+	//"websocket-server/herenow"
 
 	"github.com/gorilla/websocket"
 )
 
 type Message struct {
-	AppId     string
-	ChannelId string
-	Type      string
-	Subtype   string
-	Payload   string
+	AppId     string `json:"appId"`
+	ChannelId string `json:"channelId"`
+	Type      string `json:"type"`
+	Subtype   string `json:"subtype"`
+	Payload   string `json:"payload"`
 }
 
 // Struttura per il WebSocket
@@ -55,7 +58,21 @@ func updateLastAccess(userId string) {
 }
 
 func HandleConnection(w http.ResponseWriter, r *http.Request) {
+	
+    dump, err := httputil.DumpRequest(r, true) // true = include il body
+    if err != nil {
+        fmt.Println("Errore DumpRequest:", err)
+        return
+    }
 
+    fmt.Println("===== HTTP REQUEST DUMP =====")
+    fmt.Println(string(dump))
+    fmt.Println("===== END REQUEST =====")
+
+    key := r.Header.Get("Sec-WebSocket-Key")
+    fmt.Println("Sec-WebSocket-Key:", key)
+
+/*
 	// Read the temporary token
 	token := r.URL.Query().Get("token")
 
@@ -72,13 +89,13 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		log.Println("Can't decode token:", err)
 		return
 	}
-
+*/
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Error upgrading WebSocket:", err)
 		return
 	}
-
+/*
 	sess := auth.SetSessionActive(db.RedisGetConnection(), sessionId, true)
 
 	if sess == nil {
@@ -105,6 +122,8 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		RemoveConnection(sessionId)
 		conn.Close()
 	}()
+*/
+	log.Printf("Connected\n")
 
 	for {
 
@@ -141,6 +160,7 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		var reply Message
 
 		switch msg.AppId {
+			/*
 		case "here-now":
 			resultPayloadStr, err := herenow.MessageHandler(user["id"].(string), msg.Type, msg.Subtype, payload)
 
@@ -158,6 +178,10 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 					log.Println("Error writing message:", err)
 				}
 			}
+			*/
+			
+		case "terminal":
+			_ = terminal.MessageHandler(conn, "", payload)
 
 		default:
 			if msg.Type == "ping" {
@@ -177,13 +201,15 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		UpdateConnection(sessionId, msg.Type)
+		//UpdateConnection(sessionId, msg.Type)
 	}
-
+/*
 	log.Printf("%s disconnected\n", user["name"])
 
 	auth.SetSessionActive(db.RedisGetConnection(), sessionId, false)
 	updateLastAccess(user["id"].(string))
+*/
+	log.Printf("Disonnected\n")
 }
 
 /**

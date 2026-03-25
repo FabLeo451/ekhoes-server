@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"websocket-server/db"
@@ -60,6 +61,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Fatal(err)
 			}
+
+			query = strings.ReplaceAll(query, "{{DB_SCHEMA}}", os.Getenv("DB_SCHEMA"))
 
 			rows, err := conn.Query(query, credentials.Password, credentials.Email)
 

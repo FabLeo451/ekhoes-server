@@ -5,11 +5,11 @@ SELECT
 	STRING_AGG(DISTINCT ur.roles, ', ') AS roles,
 	STRING_AGG(DISTINCT rp.id_privilege, ', ') AS privileges
 FROM 
-	`{{DB_SCHEMA}}`.users u
+	{{DB_SCHEMA}}.users u
 JOIN 
-	`{{DB_SCHEMA}}`.user_roles ur ON u.id = ur.user_id
+	{{DB_SCHEMA}}.user_roles ur ON u.id = ur.user_id
 LEFT JOIN 
-	`{{DB_SCHEMA}}`.roles_privileges rp ON ur.roles = rp.id_role
+	{{DB_SCHEMA}}.roles_privileges rp ON ur.roles = rp.id_role
 WHERE 
 	LOWER(u.email) = LOWER($2)
 	AND u.status = 'enabled'

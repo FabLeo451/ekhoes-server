@@ -1,11 +1,11 @@
 package config
 
 import (
-	//"fmt"
 	"log"
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/shirou/gopsutil/v4/host"
 	"github.com/spf13/viper"
 )
 
@@ -46,10 +46,10 @@ type Configuration struct {
 var Conf Configuration
 
 type RuntimeStruct struct {
-	StartTime     time.Time
-	InstanceName  string
-	Database      string
-	Local         bool
+	StartTime    time.Time
+	InstanceName string
+	Database     string
+	Local        bool
 }
 
 var Runtime RuntimeStruct
@@ -61,9 +61,6 @@ func Init() {
 		//fmt.Println(".env not found, continue anyway...")
 	}
 
-	Runtime.StartTime = time.Now().UTC()
-	Runtime.Database = "None"
-	
 	Conf.Package.BuildTime = buildTime
 
 	// Configura Viper per leggere da ENV
@@ -92,11 +89,16 @@ func Init() {
 	Conf.Verbose = viper.GetBool("VERBOSE")
 	Conf.HostMountPoint = viper.GetString("HOST_MOUNT_POINT")
 	Conf.JwtSecret = viper.GetString("JWT_SECRET")
-	
+
 	Runtime.InstanceName = viper.GetString("INSTANCE_NAME")
-	
+
+	Runtime.StartTime = time.Now().UTC()
+	Runtime.Database = "None"
+
+	hostInfo, _ := host.Info()
+
 	if Runtime.InstanceName == "" {
-	    Runtime.InstanceName = "EKHOES"
+		Runtime.InstanceName = "EKHOES-" + hostInfo.Hostname
 	}
 
 	if err := viper.Unmarshal(&Conf); err != nil {

@@ -9,6 +9,7 @@ import (
 
 	"database/sql"
 
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
@@ -28,6 +29,32 @@ func OpenPostgres() (*sql.DB, error) {
 	db.SetConnMaxLifetime(time.Hour)
 
 	return db, err
+}
+
+func CheckDatabase() (bool, error) {
+	conn, err := OpenPostgres()
+	defer Close(conn)
+
+	if err != nil {
+		return false, err
+	}
+
+	err = conn.Ping()
+
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code {
+			case "3D000": // database does not exist
+				return false, nil
+			default:
+				return false, err
+			}
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }
 
 // You can stop the worker by closing the quit channel: close(quit)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"os"
 
 	"database/sql"
 
@@ -22,55 +23,57 @@ var _connection *sql.DB
 
 // Builtin module init
 func init() {
-    sub, err := fs.Sub(all, "sql")
-    if err != nil {
-        panic(err)
-    }
-    SqlFS = sub
+	sub, err := fs.Sub(all, "sql")
+	if err != nil {
+		panic(err)
+	}
+	SqlFS = sub
 }
 
 // Exported custom init
 func Init(module string, flagCreateAdmin bool) error {
 	log.Printf("Initializing database (%s)...", config.Runtime.Database)
 
-    sql, err := LoadSQL("init.sql")
+	sql, err := LoadSQL("init.sql")
 
-    if err != nil {
-        log.Fatal(err)
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    //fmt.Println(sql)
+	//fmt.Println(sql)
 
-    _, err = DB_GetConnection().Exec(sql)
+	_, err = DB_GetConnection().Exec(sql)
 
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    if flagCreateAdmin {
+	if flagCreateAdmin {
 		log.Print("Creating Administrator user...")
 
-        if err := CreateAdmin(); err != nil {
-            return err
-        }
-    }
-	
+		if err := CreateAdmin(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func LoadSQL(filename string) (string, error) {
-    folder := "postgres"
-	if config.Local() { folder = "local" }
+	folder := "postgres"
+	if config.Local() {
+		folder = "local"
+	}
 
 	path := fmt.Sprintf("%s/%s", folder, filename)
 
-    content, err := fs.ReadFile(SqlFS, path)
+	content, err := fs.ReadFile(SqlFS, path)
 
-    if err != nil {
-        return "", err
-    }
+	if err != nil {
+		return "", err
+	}
 
-    sql := string(content)
+	sql := string(content)
 
 	return sql, nil
 }
@@ -107,35 +110,43 @@ func Open(app string) error {
 		conn, err := openLocal(app)
 		_connection = conn
 
-		return err
+		if err != nil {
+			return err
+		}
 	} else {
 		if config.Conf.DB.Enabled {
 			config.Runtime.Database = "External"
 
+			log.Printf("Connecting to database %s:%s...\n", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
+
 			_, err := ConnectAndKeepAlive()
-
-			return err
+			if err != nil {
+				return err
+			}
 		}
+	}
 
-		if config.Conf.Redis.Enabled {
-			_, err := RedisConnect()
-			
+	if config.Conf.Redis.Enabled {
+		log.Printf("Connecting to Redis %s:%s...\n", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT"))
+
+		_, err := RedisConnect()
+		if err != nil {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
 func OpenAndInit(app string, flagCreateAdmin bool) error {
 	err := Open(app)
-	
+
 	if err != nil {
 		return err
 	}
-	
+
 	err = Init(app, flagCreateAdmin)
-	
+
 	return err
 }
 

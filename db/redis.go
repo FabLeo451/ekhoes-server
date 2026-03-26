@@ -21,8 +21,6 @@ func RedisConnect() (*redis.Client, error) {
 		addr := fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT"))
 		poolSize, _ := strconv.Atoi(os.Getenv("REDIS_POOLSIZE"))
 
-		log.Printf("Connecting to Redis %s ...\n", addr)
-
 		_redisConn = redis.NewClient(&redis.Options{
 			Addr:     addr,
 			Password: os.Getenv("REDIS_PASSWORD"),
@@ -46,9 +44,9 @@ func RedisGetConnection() *redis.Client {
 }
 
 func RedisClose() {
-    if _redisConn != nil {
-        if err := _redisConn.Close(); err != nil {
-            log.Printf("Error closing Redis connection: %v\n", err)
-        }
-    }
+	if _redisConn != nil {
+		if err := _redisConn.Close(); err != nil {
+			log.Printf("Error closing Redis connection: %v\n", err)
+		}
+	}
 }

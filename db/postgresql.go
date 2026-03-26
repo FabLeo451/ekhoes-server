@@ -59,8 +59,6 @@ func StartKeepAlive() {
 
 func ConnectAndKeepAlive() (*sql.DB, error) {
 
-	log.Printf("Connecting to database %s:%s...\n", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
-
 	conn, err := OpenPostgres()
 
 	if err != nil {

@@ -55,8 +55,8 @@ func DynamicCORSMiddleware(next http.Handler) http.Handler {
 func Start() int {
 
 	log.Printf("Starting %s %s\n\tpid=%d\n\tlocal=%v\n\tpostgres=%v\n\tredis=%v\n",
-		config.Conf.Package.Name,
-		config.Conf.Package.Version,
+		config.Name(),
+		config.Version(),
 		os.Getpid(),
 		config.Local(),
 		config.PosgresEnabled(),
@@ -107,7 +107,7 @@ func Start() int {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	addr := fmt.Sprintf(":%d", config.Conf.Port)
+	addr := fmt.Sprintf(":%d", config.Port())
 
 	srv := &http.Server{
 		Addr:              addr,
@@ -120,7 +120,7 @@ func Start() int {
 
 	errCh := make(chan error, 1)
 	go func() {
-		log.Printf("Listening on port %d...\n", config.Conf.Port)
+		log.Printf("Listening on port %d...\n", config.Port())
 
 		err := srv.ListenAndServe()
 
@@ -163,12 +163,12 @@ func Start() int {
 		}
 	}
 
-	if config.Conf.DB.Enabled {
+	if config.PosgresEnabled() {
 		log.Println("Closing database connection...")
 		db.Close(db.DB_GetConnection())
 	}
 
-	if config.Conf.Redis.Enabled {
+	if config.RedisEnabled() {
 		log.Println("Closing Redis connection...")
 		db.RedisClose()
 	}

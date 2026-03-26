@@ -29,7 +29,7 @@ var rootCmd = &cobra.Command{
 		config.Init()
 
 		if flagPort != 0 {
-			config.Conf.Port = flagPort
+			config.SetPort(flagPort)
 		}
 	},
 

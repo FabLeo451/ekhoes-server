@@ -127,3 +127,11 @@ func PosgresEnabled() bool {
 func RedisEnabled() bool {
 	return Conf.Redis.Enabled
 }
+
+func Port() int {
+	return Conf.Port
+}
+
+func SetPort(port int) {
+	Conf.Port = port
+}

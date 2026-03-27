@@ -83,7 +83,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 		ip := r.RemoteAddr
 		status := "idle"
-		updated := time.Now() //.Format(time.RFC3339)
 
 		sess := Session{
 			User:       user,
@@ -94,7 +93,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			DeviceType: credentials.DeviceType,
 			Ip:         ip,
 			Status:     status,
-			Updated:    updated,
+			Updated:    time.Now().UTC(),
 		}
 
 		sessionId, err = CreateSession(db.RedisGetConnection(), sess)

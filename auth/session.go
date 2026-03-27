@@ -106,59 +106,36 @@ func DeleteAllSessions(rdb *redis.Client) error {
 	return nil
 }
 
-func SetSessionActive(rdb *redis.Client, key string, active bool) map[string]interface{} {
+func SetSessionActive(sessionId string, active bool) Session {
 
-	//rdb := RedisGetConnection()
+	sessionStr, err := db.Get(sessionId)
 
-	// Get session
-
-	val, err := rdb.Get(ctx, key).Result()
-	if err == redis.Nil {
-		//log.Printf("the key to be deleted was not found: %s\n", key)
-		return nil
-	} else if err != nil {
-		log.Fatalf("Error in GET: %v", err)
-		return nil
-	} else {
-		//fmt.Printf("Valore corrente: %s\n", val)
-	}
-
-	// Fase 1: Parsing del JSON
-	var data map[string]interface{}
-	err = json.Unmarshal([]byte(val), &data)
+	var session Session
+	err = json.Unmarshal([]byte(sessionStr), &session)
 	if err != nil {
 		panic(err)
 	}
 
-	// Fase 2: Modifica del JSON
 	if active {
-		data["status"] = "online"
+		session.Status = "online"
 	} else {
-		data["status"] = "idle"
+		session.Status = "idle"
 	}
 
-	now := time.Now().UTC()
-	isoString := now.Format(time.RFC3339)
-	data["updated"] = isoString
+	session.Updated = time.Now().UTC()
 
-	// Fase 3: Conversione di nuovo in stringa
-	modifiedJSON, err := json.Marshal(data)
+	modifiedJSON, err := json.Marshal(session)
 	if err != nil {
 		panic(err)
 	}
 
-	// Update session
-
-	//err = rdb.Set(ctx, key, modifiedJSON, 0).Err()
-	err = rdb.SetArgs(ctx, key, modifiedJSON, redis.SetArgs{
-		KeepTTL: true,
-	}).Err()
+	err = db.Update(sessionId, modifiedJSON)
 
 	if err != nil {
 		log.Fatalf("Error updating: %v", err)
 	}
 
-	return data
+	return session
 }
 
 func GetSessions(rdb *redis.Client) ([]Session, error) {

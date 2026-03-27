@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/TwiN/gocache/v2"
+	"github.com/redis/go-redis/v9"
 
 	"websocket-server/config"
 )
@@ -40,6 +41,25 @@ func Set(key string, value interface{}) error {
 		err = RedisGetConnection().Set(ctx, key, value, 0).Err()
 	} else {
 		cache.Set(key, value)
+	}
+
+	return err
+}
+
+func Update(key string, value interface{}) error {
+	var err error
+
+	if config.RedisEnabled() {
+		err = RedisGetConnection().SetArgs(ctx, key, value, redis.SetArgs{
+			KeepTTL: true,
+		}).Err()
+	} else {
+		ttl, err := cache.TTL(key)
+		if err != nil {
+			return fmt.Errorf("key not found: %s", key)
+		}
+
+		cache.SetWithTTL(key, value, ttl)
 	}
 
 	return err

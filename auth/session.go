@@ -75,6 +75,9 @@ func DeleteAllSessions(rdb *redis.Client) error {
 
 func SetSessionActive(sessionId string, active bool) Session {
 	sessionStr, err := db.Get(sessionId)
+	if err != nil {
+		panic(err)
+	}
 
 	var session Session
 	err = json.Unmarshal([]byte(sessionStr), &session)

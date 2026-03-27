@@ -111,3 +111,33 @@ func DeleteKey(key string) (bool, error) {
 
 	return deleted, err
 }
+
+func DeleteByPattern(pattern string) error {
+	if config.RedisEnabled() {
+		var cursor uint64
+		ctx := context.Background()
+
+		for {
+			keys, newCursor, err := RedisGetConnection().Scan(ctx, cursor, pattern, 100).Result()
+			if err != nil {
+				return fmt.Errorf("scan error: %w", err)
+			}
+
+			if len(keys) > 0 {
+				if err := RedisGetConnection().Del(ctx, keys...).Err(); err != nil {
+					return fmt.Errorf("delete error: %w", err)
+				}
+			}
+
+			cursor = newCursor
+			if cursor == 0 {
+				break
+			}
+		}
+	} else {
+		keys := cache.GetKeysByPattern(pattern, 0)
+		cache.DeleteAll(keys)
+	}
+
+	return nil
+}

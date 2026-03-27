@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,8 +12,6 @@ import (
 
 	"log"
 )
-
-var ctx = context.Background()
 
 type User struct {
 	Id   string `json:"id" bson:"Id"`
@@ -37,9 +34,6 @@ type Session struct {
 }
 
 func CreateSession(session Session) (string, error) {
-
-	//rdb := RedisGetConnection()
-
 	data, err := json.Marshal(session)
 	if err != nil {
 		return "", err
@@ -57,7 +51,6 @@ func CreateSession(session Session) (string, error) {
 }
 
 func DeleteSession(rdb *redis.Client, sessionId string) error {
-
 	deleted, err := db.DeleteKey(sessionId)
 	if err != nil {
 		return fmt.Errorf("unable to remove key: %w", err)
@@ -72,7 +65,6 @@ func DeleteSession(rdb *redis.Client, sessionId string) error {
 }
 
 func DeleteAllSessions(rdb *redis.Client) error {
-
 	err := db.DeleteByPattern("*")
 	if err != nil {
 		return fmt.Errorf("unable to remove key: %w", err)
@@ -82,7 +74,6 @@ func DeleteAllSessions(rdb *redis.Client) error {
 }
 
 func SetSessionActive(sessionId string, active bool) Session {
-
 	sessionStr, err := db.Get(sessionId)
 
 	var session Session

@@ -58,13 +58,13 @@ func CreateSession(session Session) (string, error) {
 
 func DeleteSession(rdb *redis.Client, sessionId string) error {
 
-	result, err := rdb.Del(ctx, sessionId).Result()
+	deleted, err := db.DeleteKey(sessionId)
 	if err != nil {
 		return fmt.Errorf("unable to remove key: %w", err)
 	}
 
-	if result == 0 {
-		msg := fmt.Sprintf("deleting session key not found: %s", sessionId)
+	if !deleted {
+		msg := fmt.Sprintf("session key not found for deletion: %s", sessionId)
 		return errors.New(msg)
 	}
 
@@ -168,7 +168,6 @@ func GetSessions(rdb *redis.Client) ([]Session, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(keys)
 
 	for _, key := range keys {
 		val, err := db.Get(key)

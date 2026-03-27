@@ -147,7 +147,9 @@ func DeleteSessionHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = DeleteSession(db.RedisGetConnection(), sessionId)
 
-	log.Printf("Session deleted: %s\n", sessionId)
+	if err == nil {
+		log.Printf("Session deleted: %s\n", sessionId)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

@@ -75,11 +75,19 @@ func Get(key string) (string, error) {
 	return val, err
 }
 
-/*
-func Get(key string) (string, bool) {
-    value, found := c.Get("chiave")
-    if found {
-        fmt.Println("Valore:", value)
-    }
+func DeleteKey(key string) (bool, error) {
+	var (
+		err     error
+		n       int64
+		deleted bool
+	)
+
+	if config.RedisEnabled() {
+		n, err = RedisGetConnection().Del(ctx, key).Result()
+		deleted = n > 0
+	} else {
+		deleted = cache.Delete(key)
+	}
+
+	return deleted, err
 }
-*/

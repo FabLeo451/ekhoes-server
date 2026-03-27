@@ -38,14 +38,14 @@ func GetConnectionsCount() int32 {
 	return int32(len(connections))
 }
 
-func AddConnection(conn *websocket.Conn, sessionId string, userData map[string]interface{}) {
+func AddConnection(conn *websocket.Conn, sessionId string, email string) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	connections = append(connections, WebsocketConnection{
 		Conn:      conn,
 		SessionId: sessionId,
-		Email:     userData["email"].(string),
+		Email:     email,
 		Created:   time.Now().UTC(),
 	})
 

@@ -3,17 +3,18 @@ package websocket
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"os"
 	"time"
-	"fmt"
 
 	"log"
 
 	"websocket-server/auth"
 	"websocket-server/db"
 	"websocket-server/terminal"
+
 	//"websocket-server/herenow"
 
 	"github.com/gorilla/websocket"
@@ -58,21 +59,20 @@ func updateLastAccess(userId string) {
 }
 
 func HandleConnection(w http.ResponseWriter, r *http.Request) {
-	
-    dump, err := httputil.DumpRequest(r, true) // true = include il body
-    if err != nil {
-        fmt.Println("Errore DumpRequest:", err)
-        return
-    }
 
-    fmt.Println("===== HTTP REQUEST DUMP =====")
-    fmt.Println(string(dump))
-    fmt.Println("===== END REQUEST =====")
+	dump, err := httputil.DumpRequest(r, true) // true = include il body
+	if err != nil {
+		fmt.Println("Errore DumpRequest:", err)
+		return
+	}
 
-    key := r.Header.Get("Sec-WebSocket-Key")
-    fmt.Println("Sec-WebSocket-Key:", key)
+	fmt.Println("===== HTTP REQUEST DUMP =====")
+	fmt.Println(string(dump))
+	fmt.Println("===== END REQUEST =====")
 
-/*
+	key := r.Header.Get("Sec-WebSocket-Key")
+	fmt.Println("Sec-WebSocket-Key:", key)
+
 	// Read the temporary token
 	token := r.URL.Query().Get("token")
 
@@ -89,16 +89,16 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		log.Println("Can't decode token:", err)
 		return
 	}
-*/
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Error upgrading WebSocket:", err)
 		return
 	}
-/*
-	sess := auth.SetSessionActive(db.RedisGetConnection(), sessionId, true)
 
-	if sess == nil {
+	sess, found := auth.SetSessionActive(sessionId, true)
+
+	if !found {
 		log.Printf("Session not found in websocket connection handler: %s\n", sessionId)
 		_ = conn.WriteMessage(
 			websocket.CloseMessage,
@@ -111,18 +111,17 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := sess["user"].(map[string]interface{})
-	updateLastAccess(user["id"].(string))
+	updateLastAccess(sess.User.Id)
 
-	log.Printf("%s connected\n", user["name"])
+	log.Printf("%s connected\n", sess.User.Name)
 
-	AddConnection(conn, sessionId, user)
+	AddConnection(conn, sessionId, sess.User.Email)
 
 	defer func() {
 		RemoveConnection(sessionId)
 		conn.Close()
 	}()
-*/
+
 	log.Printf("Connected\n")
 
 	for {
@@ -160,26 +159,26 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		var reply Message
 
 		switch msg.AppId {
-			/*
-		case "here-now":
-			resultPayloadStr, err := herenow.MessageHandler(user["id"].(string), msg.Type, msg.Subtype, payload)
+		/*
+			case "here-now":
+				resultPayloadStr, err := herenow.MessageHandler(user["id"].(string), msg.Type, msg.Subtype, payload)
 
-			if err != nil {
-				log.Println(err)
-			} else {
-				var reply Message
+				if err != nil {
+					log.Println(err)
+				} else {
+					var reply Message
 
-				encoded := base64.StdEncoding.EncodeToString([]byte(resultPayloadStr))
-				reply = Message{AppId: msg.AppId, Type: msg.Type, Subtype: msg.Subtype, Payload: encoded}
+					encoded := base64.StdEncoding.EncodeToString([]byte(resultPayloadStr))
+					reply = Message{AppId: msg.AppId, Type: msg.Type, Subtype: msg.Subtype, Payload: encoded}
 
-				jsonStr, _ := json.Marshal(reply)
+					jsonStr, _ := json.Marshal(reply)
 
-				if err := conn.WriteMessage(websocket.TextMessage, []byte(jsonStr)); err != nil {
-					log.Println("Error writing message:", err)
+					if err := conn.WriteMessage(websocket.TextMessage, []byte(jsonStr)); err != nil {
+						log.Println("Error writing message:", err)
+					}
 				}
-			}
-			*/
-			
+		*/
+
 		case "terminal":
 			_ = terminal.MessageHandler(conn, "", payload)
 
@@ -203,12 +202,12 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 
 		//UpdateConnection(sessionId, msg.Type)
 	}
-/*
-	log.Printf("%s disconnected\n", user["name"])
 
-	auth.SetSessionActive(db.RedisGetConnection(), sessionId, false)
-	updateLastAccess(user["id"].(string))
-*/
+	log.Printf("%s disconnected\n", sess.User.Name)
+
+	auth.SetSessionActive(sessionId, false)
+	updateLastAccess(sess.User.Id)
+
 	log.Printf("Disonnected\n")
 }
 

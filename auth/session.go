@@ -73,7 +73,7 @@ func DeleteAllSessions(rdb *redis.Client) error {
 	return nil
 }
 
-func SetSessionActive(sessionId string, active bool) Session {
+func SetSessionActive(sessionId string, active bool) (Session, bool) {
 	sessionStr, err := db.Get(sessionId)
 	if err != nil {
 		panic(err)
@@ -104,7 +104,7 @@ func SetSessionActive(sessionId string, active bool) Session {
 		log.Fatalf("Error updating: %v", err)
 	}
 
-	return session
+	return session, true
 }
 
 func GetSessions(rdb *redis.Client) ([]Session, error) {

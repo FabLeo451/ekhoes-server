@@ -113,7 +113,7 @@ func StartInitSequence() error {
 func init() {
 	//log.SetFlags(log.Ldate | log.Ltime)
 
-	rootCmd.PersistentFlags().BoolVarP(&config.Runtime.Local, "local", "l", false, "Local mode")
+	rootCmd.PersistentFlags().BoolVarP(&config.Runtime.Local, "local", "l", false, "Local database on disk")
 	rootCmd.SetVersionTemplate(`{{.Version}}`)
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(initCmd)

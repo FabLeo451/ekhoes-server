@@ -1,11 +1,11 @@
 package auth
 
 import (
+	"ekhoes-server/db"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
-	"ekhoes-server/db"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -33,13 +33,13 @@ type Session struct {
 	Updated    time.Time `json:"updated"`
 }
 
-func CreateSession(session Session) (string, error) {
+func CreateSession(appId string, session Session) (string, error) {
 	data, err := json.Marshal(session)
 	if err != nil {
 		return "", err
 	}
 
-	sessionID := uuid.New().String()
+	sessionID := fmt.Sprintf("ses:%s:%s", appId, uuid.New().String())
 
 	err = db.Set(sessionID, data)
 

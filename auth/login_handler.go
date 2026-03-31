@@ -94,7 +94,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			Updated:    time.Now().UTC(),
 		}
 
-		sessionId, err = CreateSession(sess)
+		sessionId, err = CreateSession("ek", sess)
 
 		if err != nil {
 			log.Println(err)

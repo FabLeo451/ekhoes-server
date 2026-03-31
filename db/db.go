@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"database/sql"
 
@@ -196,7 +197,20 @@ func CheckDatabaseExists() (bool, error) {
 
 func CreateDatabase() error {
 	if config.PosgresEnabled() {
-		return ExecuteSQL("create_db.sql")
+
+		// TODO: This script should be executed by superuser
+
+		script, err := LoadSQL("create_db.sql")
+		if err != nil {
+			return err
+		}
+
+		script = strings.ReplaceAll(script, "{{DB_PASSWORD}}", os.Getenv("DB_PASSWORD"))
+
+		_, err = DB_GetConnection().Exec(script)
+		if err != nil {
+			return err
+		}
 	} else if config.Local() {
 		dbPath := fmt.Sprintf("%s/ekhoes.db", dbFolder)
 

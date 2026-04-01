@@ -15,7 +15,7 @@ import (
 var (
 	flagPort            int
 	flagModule          string
-	flagCreateIfMissing bool
+	flagInstallIfMissing bool
 	flagAdminEmail      string
 )
 
@@ -40,7 +40,7 @@ var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start server",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if flagCreateIfMissing {
+		if flagInstallIfMissing {
 			log.Println("Checking if database exists...")
 
 			dbExists, err := db.CheckDatabaseExists()
@@ -51,7 +51,7 @@ var startCmd = &cobra.Command{
 			}
 
 			if !dbExists {
-				if err := StartInitSequence(); err != nil {
+				if err := Install(); err != nil {
 					log.Fatal("Aborted")
 				}
 			}
@@ -66,15 +66,15 @@ var startCmd = &cobra.Command{
 	},
 }
 
-var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Initializes a module",
+var installCmd = &cobra.Command{
+	Use:   "install",
+	Short: "Create database and execute init script",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return StartInitSequence()
+		return Install()
 	},
 }
 
-func StartInitSequence() error {
+func Install() error {
 	dbExists, err := db.CheckDatabaseExists()
 
 	if err != nil {
@@ -82,7 +82,7 @@ func StartInitSequence() error {
 		os.Exit(1)
 	}
 
-	if !dbExists && flagCreateIfMissing {
+	if !dbExists {
 		log.Println("Creating database...")
 
 		if err := db.CreateDatabase(); err != nil {
@@ -116,15 +116,15 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&config.Runtime.Local, "local", "l", false, "Local database on disk")
 	rootCmd.SetVersionTemplate(`{{.Version}}`)
 	rootCmd.AddCommand(startCmd)
-	rootCmd.AddCommand(initCmd)
+	rootCmd.AddCommand(installCmd)
 
 	startCmd.Flags().IntVarP(&flagPort, "port", "p", 9876, "Server port")
-	startCmd.Flags().BoolVarP(&flagCreateIfMissing, "create-db", "C", false, "Create database if not exists")
-	startCmd.Flags().StringVarP(&flagAdminEmail, "create-admin", "A", "", "Create admin user")
+	startCmd.Flags().BoolVarP(&flagInstallIfMissing, "install-missing", "I", false, "Create and init database if not exists")
+	startCmd.Flags().StringVarP(&flagAdminEmail, "create-admin", "A", "", "Create admin user (with -I)")
 
-	//initCmd.Flags().StringVarP(&flagModule, "module", "m", "ekhoes", "Module to be initialized")
-	initCmd.Flags().BoolVarP(&flagCreateIfMissing, "create-db", "C", false, "Create database if not exists")
-	initCmd.Flags().StringVarP(&flagAdminEmail, "create-admin", "A", "", "Create admin user")
+	//installCmd.Flags().StringVarP(&flagModule, "module", "m", "ekhoes", "Module to be initialized")
+	//installCmd.Flags().BoolVarP(&flagInstallIfMissing, "create-db", "C", false, "Create database if not exists")
+	installCmd.Flags().StringVarP(&flagAdminEmail, "create-admin", "A", "", "Create admin user")
 }
 
 func main() {

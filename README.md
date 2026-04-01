@@ -11,10 +11,10 @@ ekhoes-server --help
 ### Available Commands
 
 ```
-completion   Generate the autocompletion script for the specified shell
-help         Display help information about any command
-init         Initialize a module
-start        Start the server
+completion  Generate the autocompletion script for the specified shell
+help        Help about any command
+install     Create database and execute init script
+start       Start server
 ```
 
 ### Command Execution

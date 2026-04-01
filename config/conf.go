@@ -41,6 +41,7 @@ type Configuration struct {
 	Verbose        bool
 	HostMountPoint string
 	JwtSecret      string
+	Modules        string // Comma separated module ids
 }
 
 var Conf Configuration
@@ -90,6 +91,7 @@ func Init() {
 	Conf.Verbose = viper.GetBool("VERBOSE")
 	Conf.HostMountPoint = viper.GetString("HOST_MOUNT_POINT")
 	Conf.JwtSecret = viper.GetString("JWT_SECRET")
+	Conf.Modules = viper.GetString("MODULES")
 
 	Runtime.InstanceName = viper.GetString("INSTANCE_NAME")
 	Runtime.StartTime = time.Now().UTC()

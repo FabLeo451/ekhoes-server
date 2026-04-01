@@ -15,6 +15,7 @@ type Module struct {
 }
 
 var modules map[string]Module
+var loaded []string
 
 func init() {
 	modules = map[string]Module{
@@ -49,5 +50,11 @@ func InitModules(r *chi.Mux) {
 		if err := m.InitFunc(r); err != nil {
 			panic(err)
 		}
+
+		loaded = append(loaded, m.Name)
 	}
+}
+
+func GetLoadedModules() string {
+	return strings.Join(loaded, ",")
 }

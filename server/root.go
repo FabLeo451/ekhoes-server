@@ -20,6 +20,7 @@ type RootData struct {
 	UpTime       string
 	Database     string
 	Cache        string
+	Modules      string
 }
 
 func humanizeDuration(d time.Duration) string {
@@ -57,6 +58,7 @@ func GetRoot(w http.ResponseWriter, r *http.Request) {
 		UpTime:       humanizeDuration(time.Since(config.Runtime.StartTime)),
 		Database:     config.Runtime.Database,
 		Cache:        config.Runtime.Cache,
+		Modules:      GetLoadedModules(),
 	}
 
 	if err := tmpl.Execute(w, data); err != nil {

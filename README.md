@@ -2,13 +2,13 @@
 
 CLI tool to start and manage **Ekhoes Server**.
 
-## 📦 Usage
+### Usage
 
 ```
 ekhoes-server --help
 ```
 
-## ▶️ Available Commands
+### Available Commands
 
 ```
 completion   Generate the autocompletion script for the specified shell
@@ -17,7 +17,7 @@ init         Initialize a module
 start        Start the server
 ```
 
-## 🏁 Command Execution
+### Command Execution
 
 Example of running a command:
 
@@ -25,14 +25,14 @@ Example of running a command:
 ekhoes-server [command]
 ```
 
-## 🔧 Global Flags
+### Global Flags
 
 ```
 -h, --help     Show help for ekhoes-server
 -l, --local    Use a local on-disk database
 ```
 
-## ℹ️ More Information
+### More Information
 
 To get help for a specific command:
 

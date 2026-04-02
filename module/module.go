@@ -48,10 +48,12 @@ func InitModules(r *chi.Mux) {
 			continue
 		}
 
-		log.Printf("Initializing module %s...", m.Name)
+		if m.InitFunc != nil {
+			log.Printf("Initializing module %s...", m.Name)
 
-		if err := m.InitFunc(r); err != nil {
-			panic(err)
+			if err := m.InitFunc(r); err != nil {
+				panic(err)
+			}
 		}
 
 		loaded = append(loaded, m.Name)

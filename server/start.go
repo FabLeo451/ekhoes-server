@@ -70,13 +70,10 @@ func Start() int {
 	r.Use(DynamicCORSMiddleware)
 
 	r.Get("/", GetRoot)
-	r.Post("/login", auth.Login)
 	r.Post("/logout", auth.Logout)
 
 	// Websocket endpoint
 	r.Method("GET", "/ws", http.HandlerFunc(websocket.HandleConnection))
-
-	// Ctl routes
 
 	r.Get("/metrics", GetMetrics)
 

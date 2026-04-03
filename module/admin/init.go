@@ -3,7 +3,6 @@ package admin
 import (
 	"github.com/go-chi/chi/v5"
 
-	"ekhoes-server/auth"
 	"ekhoes-server/module"
 	"ekhoes-server/websocket"
 )
@@ -21,10 +20,12 @@ func Register() {
 
 func Init(r *chi.Mux) error {
 
+	r.Post("/login", Login)
+
 	r.Route("/ctl", func(r chi.Router) {
-		r.Get("/sessions", auth.GetSessionsHandler)
-		r.Delete("/session/{id}", auth.DeleteSessionHandler)
-		r.Delete("/sessions", auth.DeleteAllSessionsHandler)
+		r.Get("/sessions", GetSessionsHandler)
+		r.Delete("/session/{id}", DeleteSessionHandler)
+		r.Delete("/sessions", DeleteAllSessionsHandler)
 
 		r.Get("/connections", websocket.GetConnectionsHandler)
 

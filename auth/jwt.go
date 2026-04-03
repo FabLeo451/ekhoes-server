@@ -18,7 +18,7 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-func generateJWT(sessionId, userId, email, name string, roles string, privileges string, ttl *time.Time) (string, error) {
+func GenerateJWT(sessionId, userId, email, name string, roles string, privileges string, ttl *time.Time) (string, error) {
 
 	claims := CustomClaims{
 		SessionId:  sessionId,

@@ -10,14 +10,18 @@ import (
 
 	"ekhoes-server/config"
 	"ekhoes-server/db"
+	"ekhoes-server/module"
+	"ekhoes-server/module/admin"
+	"ekhoes-server/module/cli"
+	"ekhoes-server/module/herenow"
 	"ekhoes-server/server"
 )
 
 var (
-	flagPort            int
-	flagModule          string
+	flagPort             int
+	flagModule           string
 	flagInstallIfMissing bool
-	flagAdminEmail      string
+	flagAdminEmail       string
 )
 
 // Root command
@@ -52,7 +56,7 @@ var startCmd = &cobra.Command{
 			}
 
 			if !dbExists {
-				if err := Install(); err != nil {
+				if err := Install("admin"); err != nil {
 					log.Fatal("Aborted")
 				}
 			}
@@ -68,14 +72,19 @@ var startCmd = &cobra.Command{
 }
 
 var installCmd = &cobra.Command{
-	Use:   "install",
-	Short: "Create database and execute init script",
+	Use:   "install [module]",
+	Short: "Create database and module install script",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return Install()
+		if len(args) == 0 {
+			fmt.Println("Module id missing")
+			os.Exit(1)
+		}
+
+		return Install(args[0])
 	},
 }
 
-func Install() error {
+func Install(id string) error {
 	dbExists, err := db.CheckDatabaseExists()
 
 	if err != nil {
@@ -91,21 +100,39 @@ func Install() error {
 		}
 	}
 
-	err = db.OpenAndInit(flagModule)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	m := module.GetModule(id)
+
+	if m.Install != nil {
+		err := m.Install()
+
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	if flagAdminEmail != "" {
-		log.Printf("Creating administrator user %s...", flagAdminEmail)
-		err := db.CreateAdmin(flagAdminEmail)
-		if err != nil {
+		if err := m.PostInstall(flagAdminEmail); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 	}
+	/*
+		err = db.OpenAndInit(flagModule)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 
+		if flagAdminEmail != "" {
+			log.Printf("Creating administrator user %s...", flagAdminEmail)
+			err := db.CreateAdmin(flagAdminEmail)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
+	*/
 	log.Println("Initialization successful")
 
 	return nil
@@ -129,8 +156,13 @@ func init() {
 }
 
 func main() {
+
+	// Register modules
+	admin.Register()
+	cli.Register()
+	herenow.Register()
+
 	if err := rootCmd.Execute(); err != nil {
-		// Cobra normalmente stampa già l'errore; usiamo log.Fatal come fallback.
 		log.Fatal(err)
 	}
 }

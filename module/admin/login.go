@@ -1,6 +1,7 @@
-package auth
+package admin
 
 import (
+	"ekhoes-server/auth"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -40,7 +41,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	auth := &AuthResult{
+	authRes := &AuthResult{
 		Success:    false,
 		Message:    "",
 		Id:         "",
@@ -50,19 +51,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if isGuest {
-		auth.Id = "dummyGuestId"
-		auth.Name = credentials.Name
+		authRes.Id = "dummyGuestId"
+		authRes.Name = credentials.Name
 	} else {
 
-		auth, err = Authorize(credentials.Email, credentials.Password)
+		authRes, err = Authorize(credentials.Email, credentials.Password)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		if !auth.Success {
-			http.Error(w, auth.Message, http.StatusUnauthorized)
+		if !authRes.Success {
+			http.Error(w, authRes.Message, http.StatusUnauthorized)
 			return
 		}
 	}
@@ -71,9 +72,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	sessionId := ""
 
-	user := User{
-		Id:    auth.Id,
-		Name:  auth.Name,
+	user := auth.User{
+		Id:    authRes.Id,
+		Name:  authRes.Name,
 		Email: credentials.Email,
 	}
 
@@ -82,7 +83,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		ip := r.RemoteAddr
 		status := "idle"
 
-		sess := Session{
+		sess := auth.Session{
 			User:       user,
 			Agent:      credentials.Agent,
 			Platform:   credentials.Platform,
@@ -94,7 +95,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			Updated:    time.Now().UTC(),
 		}
 
-		sessionId, err = CreateSession("ek", sess)
+		sessionId, err = auth.Create("ek", sess)
 
 		if err != nil {
 			log.Println(err)
@@ -110,7 +111,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		expiresAt = &t
 	}
 
-	token, err := generateJWT(sessionId, auth.Id, credentials.Email, auth.Name, auth.Roles, auth.Privileges, expiresAt)
+	token, err := auth.GenerateJWT(sessionId, authRes.Id, credentials.Email, authRes.Name, authRes.Roles, authRes.Privileges, expiresAt)
 
 	if err != nil {
 		log.Println(err)
@@ -127,7 +128,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`{"token":"%s", "name":"%s", "id":"%s", "hostname":"%s" }`, token, auth.Name, auth.Id, hostname)))
+	w.Write([]byte(fmt.Sprintf(`{"token":"%s", "name":"%s", "id":"%s", "hostname":"%s" }`, token, authRes.Name, authRes.Id, hostname)))
 
 	//fmt.Println(token)
 

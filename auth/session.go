@@ -33,7 +33,7 @@ type Session struct {
 	Updated    time.Time `json:"updated"`
 }
 
-func CreateSession(appId string, session Session) (string, error) {
+func Create(appId string, session Session) (string, error) {
 	data, err := json.Marshal(session)
 	if err != nil {
 		return "", err
@@ -50,7 +50,7 @@ func CreateSession(appId string, session Session) (string, error) {
 	return sessionID, nil
 }
 
-func DeleteSession(rdb *redis.Client, sessionId string) error {
+func Delete(sessionId string) error {
 	deleted, err := db.DeleteKey(sessionId)
 	if err != nil {
 		return fmt.Errorf("unable to remove key: %w", err)
@@ -64,7 +64,7 @@ func DeleteSession(rdb *redis.Client, sessionId string) error {
 	return nil
 }
 
-func DeleteAllSessions(rdb *redis.Client) error {
+func DeleteAllSessions() error {
 	err := db.DeleteByPattern("*")
 	if err != nil {
 		return fmt.Errorf("unable to remove key: %w", err)

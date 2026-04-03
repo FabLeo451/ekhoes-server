@@ -1,22 +1,19 @@
 package server
 
 import (
-	//"encoding/json"
 	"errors"
-	//"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
-	//"path"
 	"ekhoes-server/auth"
 	"ekhoes-server/config"
 	"ekhoes-server/db"
-	"ekhoes-server/system"
-	"ekhoes-server/terminal"
+	"ekhoes-server/module"
+
 	"ekhoes-server/websocket"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -73,31 +70,17 @@ func Start() int {
 	r.Use(DynamicCORSMiddleware)
 
 	r.Get("/", GetRoot)
-	r.Post("/login", auth.Login)
 	r.Post("/logout", auth.Logout)
 
 	// Websocket endpoint
 	r.Method("GET", "/ws", http.HandlerFunc(websocket.HandleConnection))
 
-	// Ctl routes
-	r.Route("/ctl", func(r chi.Router) {
-		r.Get("/sessions", auth.GetSessionsHandler)
-		r.Delete("/session/{id}", auth.DeleteSessionHandler)
-		r.Delete("/sessions", auth.DeleteAllSessionsHandler)
-
-		r.Get("/connections", websocket.GetConnectionsHandler)
-
-		r.Get("/system", system.GetSystemInfo)
-		r.Get("/top", system.TopCpuProcesses)
-	})
-
 	r.Get("/metrics", GetMetrics)
 
-	r.Get("/terminal", terminal.OpenTerminal)
+	//r.Get("/terminal", terminal.OpenTerminal)
 
 	// Init modules
-	InitModules(r)
-
+	module.InitModules(r)
 
 	// Create a context that will be removed on SIGINT or SIGTERM
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

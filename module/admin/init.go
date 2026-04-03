@@ -1,6 +1,8 @@
 package admin
 
 import (
+	"fmt"
+
 	"github.com/go-chi/chi/v5"
 
 	"ekhoes-server/module"
@@ -20,17 +22,21 @@ func Register() {
 
 func Init(r *chi.Mux) error {
 
-	r.Post("/login", Login)
+	root := fmt.Sprintf("/%s", thisModule.Id)
 
-	r.Route("/ctl", func(r chi.Router) {
-		r.Get("/sessions", GetSessionsHandler)
-		r.Delete("/session/{id}", DeleteSessionHandler)
-		r.Delete("/sessions", DeleteAllSessionsHandler)
+	r.Route(root, func(r chi.Router) {
+		r.Post("/login", Login)
 
-		r.Get("/connections", websocket.GetConnectionsHandler)
+		r.Route("/ctl", func(r chi.Router) {
+			r.Get("/sessions", GetSessionsHandler)
+			r.Delete("/session/{id}", DeleteSessionHandler)
+			r.Delete("/sessions", DeleteAllSessionsHandler)
 
-		r.Get("/system", GetSystemInfo)
-		r.Get("/top", TopCpuProcesses)
+			r.Get("/connections", websocket.GetConnectionsHandler)
+
+			r.Get("/system", GetSystemInfo)
+			r.Get("/top", TopCpuProcesses)
+		})
 	})
 
 	return nil

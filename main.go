@@ -10,6 +10,7 @@ import (
 
 	"ekhoes-server/config"
 	"ekhoes-server/db"
+	"ekhoes-server/module/admin"
 	"ekhoes-server/module/cli"
 	"ekhoes-server/module/herenow"
 	"ekhoes-server/server"
@@ -133,6 +134,7 @@ func init() {
 func main() {
 
 	// Register modules
+	admin.Register()
 	cli.Register()
 	herenow.Register()
 

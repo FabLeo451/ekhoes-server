@@ -12,7 +12,6 @@ import (
 	"ekhoes-server/config"
 	"ekhoes-server/db"
 	"ekhoes-server/module"
-	"ekhoes-server/system"
 
 	"ekhoes-server/websocket"
 
@@ -78,16 +77,6 @@ func Start() int {
 	r.Method("GET", "/ws", http.HandlerFunc(websocket.HandleConnection))
 
 	// Ctl routes
-	r.Route("/ctl", func(r chi.Router) {
-		r.Get("/sessions", auth.GetSessionsHandler)
-		r.Delete("/session/{id}", auth.DeleteSessionHandler)
-		r.Delete("/sessions", auth.DeleteAllSessionsHandler)
-
-		r.Get("/connections", websocket.GetConnectionsHandler)
-
-		r.Get("/system", system.GetSystemInfo)
-		r.Get("/top", system.TopCpuProcesses)
-	})
 
 	r.Get("/metrics", GetMetrics)
 

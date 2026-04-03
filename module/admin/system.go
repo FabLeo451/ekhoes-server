@@ -1,4 +1,4 @@
-package system
+package admin
 
 import (
 	"ekhoes-server/auth"

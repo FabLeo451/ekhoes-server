@@ -17,23 +17,18 @@ import (
  */
 func Login(w http.ResponseWriter, r *http.Request) {
 
-	//isGuest := r.URL.Query().Has("guest")
 	nosession := r.URL.Query().Has("nosession") // Used by cli
 
 	var credentials auth.Credentials
 
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 
-	//fmt.Println(credentials)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	authRes := &AuthResult{}
-
-	authRes, err = Authorize(credentials.Email, credentials.Password)
+	authRes, err := Authorize(credentials.Email, credentials.Password)
 
 	if err != nil {
 		utils.LogErr(thisModule, err)
@@ -48,30 +43,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	sessionId := ""
 
-	user := auth.User{
-		Id:    authRes.Id,
-		Name:  authRes.Name,
-		Email: credentials.Email,
-	}
-
 	if !nosession {
 
-		ip := r.RemoteAddr
-		status := "idle"
-
-		sess := auth.Session{
-			User:       user,
-			Agent:      credentials.Agent,
-			Platform:   credentials.Platform,
-			Model:      credentials.Model,
-			DeviceName: credentials.DeviceName,
-			DeviceType: credentials.DeviceType,
-			Ip:         ip,
-			Status:     status,
-			Updated:    time.Now().UTC(),
-		}
-
-		sessionId, err = auth.Create("ek", sess)
+		sessionId, err = auth.CreateSession("ek", credentials, authRes.User, r.RemoteAddr)
 
 		if err != nil {
 			log.Println(err)
@@ -82,7 +56,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	var expiresAt *time.Time = nil
 
-	token, err := auth.GenerateJWT(sessionId, authRes.Id, credentials.Email, authRes.Name, authRes.Roles, authRes.Privileges, expiresAt)
+	token, err := auth.GenerateJWT(sessionId, authRes.User.Id, credentials.Email, authRes.User.Name, authRes.User.Roles, authRes.User.Privileges, expiresAt)
 
 	if err != nil {
 		log.Println(err)
@@ -94,9 +68,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`{"token":"%s", "name":"%s", "id":"%s", "hostname":"%s" }`, token, authRes.Name, authRes.Id, hostname)))
+	w.Write([]byte(fmt.Sprintf(`{"token":"%s", "name":"%s", "id":"%s", "hostname":"%s" }`, token, authRes.User.Name, authRes.User.Id, hostname)))
 
 	//fmt.Println(token)
 
-	utils.Log(thisModule, "%s successfully authenticated\n", user.Email)
+	utils.Log(thisModule, "%s successfully authenticated\n", authRes.User.Email)
 }

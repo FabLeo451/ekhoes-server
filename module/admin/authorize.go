@@ -4,16 +4,14 @@ import (
 	"database/sql"
 	"errors"
 
+	"ekhoes-server/auth"
 	"ekhoes-server/db"
 )
 
 type AuthResult struct {
-	Success    bool   `json:"success"`
-	Message    string `json:"message"`
-	Id         string `json:"id"`
-	Name       string `json:"name"`
-	Roles      string `json:"roles"`
-	Privileges string `json:"privileges"`
+	Success bool      `json:"success"`
+	Message string    `json:"message"`
+	User    auth.User `json:"user"`
 }
 
 /**
@@ -21,14 +19,7 @@ type AuthResult struct {
  */
 func Authorize(email string, password string) (*AuthResult, error) {
 
-	result := &AuthResult{
-		Success:    false,
-		Message:    "",
-		Id:         "",
-		Name:       "",
-		Roles:      "",
-		Privileges: "",
-	}
+	result := &AuthResult{}
 
 	conn := db.DB_GetConnection()
 
@@ -54,7 +45,7 @@ func Authorize(email string, password string) (*AuthResult, error) {
 		password_match := false
 
 		for rows.Next() {
-			_ = rows.Scan(&result.Id, &result.Name, &password_match, &result.Roles, &result.Privileges)
+			_ = rows.Scan(&result.User.Id, &result.User.Name, &password_match, &result.User.Roles, &result.User.Privileges)
 
 			if !password_match {
 				result.Message = "Wrong password"
@@ -64,7 +55,7 @@ func Authorize(email string, password string) (*AuthResult, error) {
 			result.Success = true
 		}
 
-		if result.Id == "" {
+		if result.User.Id == "" {
 			result.Message = "User not found"
 			return result, nil
 		}
@@ -72,6 +63,8 @@ func Authorize(email string, password string) (*AuthResult, error) {
 	} else {
 		return nil, errors.New("Database unavailable")
 	}
+
+	result.User.Email = email
 
 	return result, nil
 }

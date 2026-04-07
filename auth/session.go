@@ -14,10 +14,11 @@ import (
 )
 
 type User struct {
-	Id   string `json:"id" bson:"Id"`
-	Name string `json:"name" bson:"Name"`
-	//Password string `json:"password" bson:"Password"`
-	Email string `json:"email" bson:"Email"`
+	Id         string `json:"id" bson:"Id"`
+	Name       string `json:"name" bson:"Name"`
+	Email      string `json:"email" bson:"Email"`
+	Roles      string `json:"roles" bson:"Roles"`
+	Privileges string `json:"privileges" bson:"Privileges"`
 }
 
 type Session struct {
@@ -33,21 +34,52 @@ type Session struct {
 	Updated    time.Time `json:"updated"`
 }
 
-func Create(appId string, session Session) (string, error) {
+/*
+	func Create(appId string, session Session) (string, error) {
+		data, err := json.Marshal(session)
+		if err != nil {
+			return "", err
+		}
+
+		sessionID := fmt.Sprintf("ses:%s:%s", appId, uuid.New().String())
+
+		err = db.Set(sessionID, data)
+
+		if err != nil {
+			log.Fatalf("Error creating session: %v", err)
+		}
+
+		return sessionID, nil
+	}
+*/
+
+func CreateSession(appId string, credentials Credentials, authenticatedUser User, remoteIp string) (string, error) {
+	session := Session{
+		User:       authenticatedUser,
+		Agent:      credentials.Agent,
+		Platform:   credentials.Platform,
+		Model:      credentials.Model,
+		DeviceName: credentials.DeviceName,
+		DeviceType: credentials.DeviceType,
+		Ip:         remoteIp,
+		Status:     "idle",
+		Updated:    time.Now().UTC(),
+	}
+
 	data, err := json.Marshal(session)
 	if err != nil {
 		return "", err
 	}
 
-	sessionID := fmt.Sprintf("ses:%s:%s", appId, uuid.New().String())
+	sessionId := fmt.Sprintf("ses:%s:%s", appId, uuid.New().String())
 
-	err = db.Set(sessionID, data)
+	err = db.Set(sessionId, data)
 
 	if err != nil {
 		log.Fatalf("Error creating session: %v", err)
 	}
 
-	return sessionID, nil
+	return sessionId, nil
 }
 
 func Delete(sessionId string) error {

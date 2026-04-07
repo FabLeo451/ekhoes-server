@@ -57,7 +57,8 @@ func Authorize(email string, password string) (*AuthResult, error) {
 			_ = rows.Scan(&result.Id, &result.Name, &password_match, &result.Roles, &result.Privileges)
 
 			if !password_match {
-				return nil, errors.New("Wrong password")
+				result.Message = "Wrong password"
+				return result, nil
 			}
 
 			result.Success = true

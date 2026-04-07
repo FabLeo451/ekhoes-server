@@ -2,6 +2,7 @@ package admin
 
 import (
 	"ekhoes-server/auth"
+	"ekhoes-server/utils"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,27 +11,16 @@ import (
 	"time"
 )
 
-type Credentials struct {
-	Name       string `json:"name"`
-	Email      string `json:"email"`
-	Password   string `json:"password"`
-	Agent      string `json:"agent"`
-	Platform   string `json:"platform"`
-	Model      string `json:"model"`
-	DeviceName string `json:"deviceName"`
-	DeviceType string `json:"deviceType"`
-}
-
 /**
  * POST /login
  * -H "x-user-agent: Radar/1.0.0" -H "x-platform: Android" -d '{ email: "admin@hal9k.net", password: "admin" }'
  */
 func Login(w http.ResponseWriter, r *http.Request) {
 
-	isGuest := r.URL.Query().Has("guest")
+	//isGuest := r.URL.Query().Has("guest")
 	nosession := r.URL.Query().Has("nosession") // Used by cli
 
-	var credentials Credentials
+	var credentials auth.Credentials
 
 	err := json.NewDecoder(r.Body).Decode(&credentials)
 
@@ -41,31 +31,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authRes := &AuthResult{
-		Success:    false,
-		Message:    "",
-		Id:         "",
-		Name:       "",
-		Roles:      "",
-		Privileges: "",
+	authRes := &AuthResult{}
+
+	authRes, err = Authorize(credentials.Email, credentials.Password)
+
+	if err != nil {
+		utils.LogErr(thisModule, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	if isGuest {
-		authRes.Id = "dummyGuestId"
-		authRes.Name = credentials.Name
-	} else {
-
-		authRes, err = Authorize(credentials.Email, credentials.Password)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if !authRes.Success {
-			http.Error(w, authRes.Message, http.StatusUnauthorized)
-			return
-		}
+	if !authRes.Success {
+		http.Error(w, authRes.Message, http.StatusUnauthorized)
+		return
 	}
 
 	// User authenticated or guest
@@ -106,11 +84,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	var expiresAt *time.Time = nil
 
-	if isGuest {
-		t := time.Now().Add(24 * time.Hour)
-		expiresAt = &t
-	}
-
 	token, err := auth.GenerateJWT(sessionId, authRes.Id, credentials.Email, authRes.Name, authRes.Roles, authRes.Privileges, expiresAt)
 
 	if err != nil {
@@ -132,9 +105,5 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	//fmt.Println(token)
 
-	if isGuest {
-		log.Printf("Guest %s entered\n", user.Name)
-	} else {
-		log.Printf("User %s successfully authenticated\n", user.Name)
-	}
+	utils.Log(thisModule, "%s successfully authenticated\n", user.Email)
 }

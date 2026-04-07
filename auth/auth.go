@@ -8,6 +8,17 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type Credentials struct {
+	Name       string `json:"name"`
+	Email      string `json:"email"`
+	Password   string `json:"password"`
+	Agent      string `json:"agent"`
+	Platform   string `json:"platform"`
+	Model      string `json:"model"`
+	DeviceName string `json:"deviceName"`
+	DeviceType string `json:"deviceType"`
+}
+
 func CheckAuthorization(r *http.Request) (jwt.MapClaims, error) {
 
 	token := r.Header.Get("Authorization")

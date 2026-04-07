@@ -45,7 +45,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	if !nosession {
 
-		sessionId, err = auth.CreateSession("ek", credentials, authRes.User, r.RemoteAddr)
+		sessionId, err = auth.CreateSession("eks", credentials, authRes.User, r.RemoteAddr)
 
 		if err != nil {
 			log.Println(err)

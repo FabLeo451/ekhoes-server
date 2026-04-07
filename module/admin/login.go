@@ -46,8 +46,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// User authenticated or guest
-
 	sessionId := ""
 
 	user := auth.User{
@@ -92,12 +90,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		log.Println(err)
-		http.Error(w, "Error generating token", http.StatusInternalServerError)
-		return
-	}
+	hostname, _ := os.Hostname()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

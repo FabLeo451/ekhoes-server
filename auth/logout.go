@@ -25,6 +25,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	//sessionId, err := verifyJWT(payload.Token)
@@ -32,7 +33,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

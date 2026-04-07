@@ -15,9 +15,9 @@ type AuthResult struct {
 }
 
 /**
- * Authorize - Query database for user
+ * Authenticate - Query database for user
  */
-func Authorize(email string, password string) (*AuthResult, error) {
+func Authenticate(email string, password string) (*AuthResult, error) {
 
 	result := &AuthResult{}
 

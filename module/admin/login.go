@@ -28,7 +28,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authRes, err := Authorize(credentials.Email, credentials.Password)
+	authRes, err := Authenticate(credentials.Email, credentials.Password)
 
 	if err != nil {
 		utils.LogErr(thisModule, err)

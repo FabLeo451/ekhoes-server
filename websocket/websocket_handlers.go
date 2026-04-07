@@ -120,7 +120,7 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updateLastAccess(sess.User.Id)
+	//updateLastAccess(sess.User.Id)
 
 	log.Printf("%s connected\n", sess.User.Name)
 

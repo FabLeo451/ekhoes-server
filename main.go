@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -108,6 +109,8 @@ func Install(id string) error {
 		if err != nil {
 			log.Fatal(err)
 		}
+	} else {
+		return errors.New("no installation method delcared for module")
 	}
 
 	if flagAdminEmail != "" {
@@ -116,23 +119,7 @@ func Install(id string) error {
 			os.Exit(1)
 		}
 	}
-	/*
-		err = db.OpenAndInit(flagModule)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
 
-		if flagAdminEmail != "" {
-			log.Printf("Creating administrator user %s...", flagAdminEmail)
-			err := db.CreateAdmin(flagAdminEmail)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-		}
-
-	*/
 	log.Println("Initialization successful")
 
 	return nil

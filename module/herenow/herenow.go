@@ -10,14 +10,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 
 	"ekhoes-server/db"
-	"ekhoes-server/module"
 )
-
-var thisModule module.Module
 
 type Location struct {
 	Latitude  float64 `json:"latitude"`
@@ -68,68 +64,6 @@ type Comment struct {
 	Message   string    `json:"message"`
 	Created   time.Time `db:"created" json:"created"`
 	Updated   time.Time `db:"updated" json:"updated"`
-}
-
-func Register() {
-	thisModule = module.Module{
-		Id:       "herenow",
-		Name:     "HereNow",
-		InitFunc: Init,
-	}
-	module.Register(thisModule)
-}
-
-func Init(r *chi.Mux) error {
-
-	//utils.Log(thisModule, "Initializing...")
-
-	r.Route("/hn", func(r chi.Router) {
-		r.Route("/hotspot", func(r chi.Router) {
-			// GET /hotspot
-			r.Get("/", GetHotspot)
-
-			// POST /hotspot
-			r.Post("/", PostHotspot)
-
-			// Routes with /hotspot/{id}
-			r.Route("/{id}", func(r chi.Router) {
-				// GET /hotspot/{id}
-				r.Get("/", GetHotspot)
-
-				// PUT /hotspot/{id}
-				r.Put("/", PutHotspot)
-
-				// DELETE /hotspot/{id}
-				r.Delete("/", DeleteHotspot)
-
-				// POST/DELETE /hotspot/{id}/like
-				r.Post("/like", LikeHotspot)
-				r.Delete("/like", LikeHotspot)
-
-				// POST /hotspot/{id}/clone
-				r.Post("/clone", CloneHotspotHandler)
-
-				// POST/DELETE /hotspot/{id}/subscription
-				r.Post("/subscription", SubscribeUnsubscribeHandler)
-				r.Delete("/subscription", SubscribeUnsubscribeHandler)
-
-				// POST /hotspot/{id}/comment
-				r.Get("/comments", GetCommentsHandler)
-
-				// POST /hotspot/{id}/comment
-				r.Post("/comment", PostHotspotCommentHandler)
-
-				// DELETE /hotspot/{id}/comment/{commentId}
-				r.Delete("/comment/{commentId}", DeleteHotspotCommentHandler)
-			})
-		})
-
-		r.Get("/categories", GetCategoriesHandler)
-		r.Get("/mysubscriptions", GetMySubscriptions)
-		r.Get("/search", SearchHandler)
-	})
-
-	return nil
 }
 
 /**

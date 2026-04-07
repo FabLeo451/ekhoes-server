@@ -12,3 +12,4 @@ GRANT ALL PRIVILEGES ON DATABASE ekhoesdb TO ekhoesadmin;
 
 -- Extension is created inside the current database
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS postgis;

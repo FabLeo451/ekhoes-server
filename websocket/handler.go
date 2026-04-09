@@ -4,13 +4,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
-	"os"
 	"time"
 
 	"log"
 
 	"ekhoes-server/auth"
-	"ekhoes-server/db"
 	"ekhoes-server/module/cli"
 
 	//"websocket-server/herenow"
@@ -20,9 +18,7 @@ import (
 
 type Message struct {
 	AppId     string `json:"appId"`
-	ChannelId string `json:"channelId"`
-	Type      string `json:"type"`
-	Subtype   string `json:"subtype"`
+	MessageId string `json:"messageId"`
 	Payload   string `json:"payload"`
 }
 
@@ -32,28 +28,6 @@ var upgrader = websocket.Upgrader{
 		// Permetti connessioni da qualsiasi origine
 		return true
 	},
-}
-
-func updateLastAccess(userId string) {
-
-	//log.Printf("Updating last access for %s\n", userId)
-
-	db := db.DB_GetConnection()
-
-	if db != nil {
-
-		//now := time.Now().UTC()
-
-		_, err := db.Exec("update "+os.Getenv("DB_SCHEMA")+".users set last_access = now(), updated = now() where id = $1", userId)
-
-		if err != nil {
-			log.Printf("%s\n", err.Error())
-		}
-
-	} else {
-		log.Printf("Database unavailable\n")
-	}
-
 }
 
 func HandleConnection(w http.ResponseWriter, r *http.Request) {
@@ -119,8 +93,6 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		//conn.Close()
 		return
 	}
-
-	//updateLastAccess(sess.User.Id)
 
 	log.Printf("%s connected\n", sess.User.Name)
 
@@ -192,10 +164,10 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 			_ = cli.MessageHandler(conn, "", payload)
 
 		default:
-			if msg.Type == "ping" {
+			if msg.MessageId == "ping" {
 				now := time.Now().UTC()
 				isoString := now.Format(time.RFC3339)
-				reply = Message{Type: "pong", Payload: isoString}
+				reply = Message{MessageId: "pong", Payload: isoString}
 
 				jsonStr, _ := json.Marshal(reply)
 
@@ -204,19 +176,17 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 			} else {
-				log.Printf("Unhandled message from app '%s' of type '%s': %s\n", msg.AppId, msg.Type, payload)
+				log.Printf("Unhandled message from app '%s' message id '%s': %s\n", msg.AppId, msg.MessageId, payload)
 				//reply = Message{Type: "default", Text: "Hello from websocket server"}
 			}
 		}
-
-		//UpdateConnection(sessionId, msg.Type)
 	}
 
 	log.Printf("Disonnected\n")
 }
 
 /**
- * GET /connections
+ * GET /ws
  */
 func GetConnectionsHandler(w http.ResponseWriter, r *http.Request) {
 	claims, err := auth.CheckAuthorization(r)

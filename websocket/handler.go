@@ -73,26 +73,34 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sess, found := auth.SetSessionActive(sessionId, true)
+
+	if !found {
+		log.Printf("Session not found in websocket connection handler: %s\n", sessionId)
+		return
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Error upgrading WebSocket:", err)
 		return
 	}
+	/*
+		sess, found := auth.SetSessionActive(sessionId, true)
 
-	sess, found := auth.SetSessionActive(sessionId, true)
-
-	if !found {
-		log.Printf("Session not found in websocket connection handler: %s\n", sessionId)
-		_ = conn.WriteMessage(
-			websocket.CloseMessage,
-			websocket.FormatCloseMessage(
-				websocket.ClosePolicyViolation, // 1008
-				"Session not found",
-			),
-		)
-		//conn.Close()
-		return
-	}
+		if !found {
+			log.Printf("Session not found in websocket connection handler: %s\n", sessionId)
+			_ = conn.WriteMessage(
+				websocket.CloseMessage,
+				websocket.FormatCloseMessage(
+					websocket.ClosePolicyViolation, // 1008
+					"Session not found",
+				),
+			)
+			//conn.Close()
+			return
+		}
+	*/
 
 	log.Printf("%s connected\n", sess.User.Email)
 

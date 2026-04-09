@@ -106,12 +106,13 @@ func DeleteAllSessions() error {
 }
 
 func SetSessionActive(sessionId string, active bool) (Session, bool) {
+	var session Session
+
 	sessionStr, err := db.Get(sessionId)
 	if err != nil {
-		panic(err)
+		return session, false
 	}
 
-	var session Session
 	err = json.Unmarshal([]byte(sessionStr), &session)
 	if err != nil {
 		panic(err)

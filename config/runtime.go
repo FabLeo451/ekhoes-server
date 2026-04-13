@@ -5,11 +5,10 @@ import (
 )
 
 type RuntimeStruct struct {
-	StartTime    time.Time
-	InstanceName string
-	Database     string
-	Local        bool
-	Cache        string
+	StartTime time.Time
+	Local     bool
+	Database  string
+	Cache     string
 }
 
 var Runtime RuntimeStruct

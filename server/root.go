@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -53,7 +54,7 @@ func GetRoot(w http.ResponseWriter, r *http.Request) {
 	data := RootData{
 		Package:      config.Name(),
 		Version:      config.Version(),
-		InstanceName: config.Runtime.InstanceName,
+		InstanceName: os.Getenv("INSTANCE_NAME"),
 		BuildTime:    config.BuildTime(),
 		StartTime:    config.Runtime.StartTime.Format(time.RFC3339),
 		UpTime:       humanizeDuration(time.Since(config.Runtime.StartTime)),

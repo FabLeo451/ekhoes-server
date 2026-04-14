@@ -4,7 +4,7 @@ import (
 	"ekhoes-server/assets"
 	"ekhoes-server/config"
 	"ekhoes-server/module"
-	"fmt"
+	"ekhoes-server/utils"
 	"html/template"
 	"net/http"
 	"os"
@@ -20,23 +20,10 @@ type RootData struct {
 	BuildTime    string
 	StartTime    string
 	UpTime       string
+	Container    bool
 	Database     string
 	Cache        string
 	Modules      string
-}
-
-func humanizeDuration(d time.Duration) string {
-	h := int(d.Hours())
-	m := int(d.Minutes()) % 60
-	s := int(d.Seconds()) % 60
-
-	if h > 0 {
-		return fmt.Sprintf("%dh %dm %ds", h, m, s)
-	}
-	if m > 0 {
-		return fmt.Sprintf("%dm %ds", m, s)
-	}
-	return fmt.Sprintf("%ds", s)
 }
 
 func GetRoot(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +44,8 @@ func GetRoot(w http.ResponseWriter, r *http.Request) {
 		InstanceName: os.Getenv("INSTANCE_NAME"),
 		BuildTime:    config.BuildTime(),
 		StartTime:    config.Runtime.StartTime.Format(time.RFC3339),
-		UpTime:       humanizeDuration(time.Since(config.Runtime.StartTime)),
+		UpTime:       utils.HumanizeDuration(time.Since(config.Runtime.StartTime)),
+		Container:    config.IsRunningInContainer(),
 		Database:     config.Runtime.Database,
 		Cache:        config.Runtime.Cache,
 		Modules:      module.GetLoadedModules(),

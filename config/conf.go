@@ -26,8 +26,8 @@ func Init() {
 
 	hostInfo, _ := host.Info()
 
-	if os.Getenv("INSTANCE_NAME") == "" {
-		os.Setenv("INSTANCE_NAME", "EKHOES-"+hostInfo.Hostname)
+	if os.Getenv("EKHOES_INSTANCE_NAME") == "" {
+		os.Setenv("EKHOES_INSTANCE_NAME", "EKHOES-"+hostInfo.Hostname)
 	}
 }
 
@@ -44,18 +44,18 @@ func BuildTime() string {
 }
 
 func PosgresEnabled() bool {
-	return os.Getenv("DB_ENABLED") == "true"
+	return os.Getenv("EKHOES_DB_ENABLED") == "true"
 }
 
 func RedisEnabled() bool {
-	return os.Getenv("REDIS_ENABLED") == "true"
+	return os.Getenv("EKHOES_REDIS_ENABLED") == "true"
 }
 
 func Port() int {
 	port := 9876
 
-	if os.Getenv("PORT") != "" {
-		port, _ = strconv.Atoi(os.Getenv("PORT"))
+	if os.Getenv("EKHOES_PORT") != "" {
+		port, _ = strconv.Atoi(os.Getenv("EKHOES_PORT"))
 
 	}
 
@@ -64,4 +64,12 @@ func Port() int {
 
 func SetPort(port int) {
 	os.Setenv("PORT", strconv.Itoa(port))
+}
+
+func JWTSecret() string {
+	return os.Getenv("EKHOES_JWT_SECRET")
+}
+
+func InstanceName() string {
+	return os.Getenv("EKHOES_INSTANCE_NAME")
 }

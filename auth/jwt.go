@@ -1,8 +1,8 @@
 package auth
 
 import (
+	"ekhoes-server/config"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -40,7 +40,7 @@ func GenerateJWT(sessionId, userId, email, name string, roles string, privileges
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	tokenString, err := token.SignedString([]byte(config.JWTSecret()))
 	if err != nil {
 		return "", err
 	}
@@ -50,7 +50,7 @@ func GenerateJWT(sessionId, userId, email, name string, roles string, privileges
 
 func DecodeJWT(tokenString string) (jwt.MapClaims, error) {
 
-	var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
+	var jwtSecret = []byte(config.JWTSecret())
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

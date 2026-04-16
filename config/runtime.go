@@ -20,8 +20,8 @@ func Local() bool {
 }
 
 func IsRunningInContainer() bool {
-	if os.Getenv("RUNNING_IN_CONTAINER") != "" {
-		return os.Getenv("RUNNING_IN_CONTAINER") == "true"
+	if os.Getenv("EKHOES_RUNNING_IN_CONTAINER") != "" {
+		return os.Getenv("EKHOES_RUNNING_IN_CONTAINER") == "true"
 	}
 
 	if _, err := os.Stat("/.dockerenv"); err == nil {

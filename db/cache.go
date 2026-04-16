@@ -21,7 +21,7 @@ var (
 func OpenCache() error {
 	if config.RedisEnabled() {
 
-		log.Printf("Connecting to Redis %s:%s...\n", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT"))
+		log.Printf("Connecting to Redis %s:%s...\n", os.Getenv("EKHOES_REDIS_HOST"), os.Getenv("EKHOES_REDIS_PORT"))
 
 		_, err := RedisConnect()
 		if err != nil {

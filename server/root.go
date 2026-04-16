@@ -7,7 +7,6 @@ import (
 	"ekhoes-server/utils"
 	"html/template"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -41,7 +40,7 @@ func GetRoot(w http.ResponseWriter, r *http.Request) {
 	data := RootData{
 		Package:      config.Name(),
 		Version:      config.Version(),
-		InstanceName: os.Getenv("INSTANCE_NAME"),
+		InstanceName: config.InstanceName(),
 		BuildTime:    config.BuildTime(),
 		StartTime:    config.Runtime.StartTime.Format(time.RFC3339),
 		UpTime:       utils.HumanizeDuration(time.Since(config.Runtime.StartTime)),

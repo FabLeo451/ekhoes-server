@@ -17,10 +17,10 @@ import (
  */
 func OpenPostgres() (*sql.DB, error) {
 
-	poolSize, _ := strconv.Atoi(os.Getenv("DB_POOLSIZE"))
-	port, _ := strconv.Atoi(os.Getenv("DB_PORT"))
+	poolSize, _ := strconv.Atoi(os.Getenv("EKHOES_DB_POOLSIZE"))
+	port, _ := strconv.Atoi(os.Getenv("EKHOES_DB_PORT"))
 
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", os.Getenv("DB_HOST"), port, os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", os.Getenv("EKHOES_DB_HOST"), port, os.Getenv("EKHOES_DB_USER"), os.Getenv("EKHOES_DB_PASSWORD"), os.Getenv("EKHOES_DB_NAME"))
 	db, err := sql.Open("postgres", psqlconn)
 
 	db.SetMaxOpenConns(poolSize)
@@ -59,7 +59,7 @@ func CheckPostgres() (bool, error) {
 // You can stop the worker by closing the quit channel: close(quit)
 func StartKeepAlive() {
 
-	heartbeat, _ := strconv.Atoi(os.Getenv("DB_HEARTBEAT"))
+	heartbeat, _ := strconv.Atoi(os.Getenv("EKHOES_DB_HEARTBEAT"))
 
 	ticker := time.NewTicker(time.Duration(heartbeat) * time.Second)
 

@@ -33,7 +33,7 @@ func init() {
 */
 
 func InitModules(r *chi.Mux) {
-	modulesEnv := os.Getenv("MODULES")
+	modulesEnv := os.Getenv("EKHOES_MODULES")
 
 	if modulesEnv == "" {
 		return

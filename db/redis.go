@@ -18,12 +18,12 @@ var (
 
 func RedisConnect() (*redis.Client, error) {
 	once.Do(func() {
-		addr := fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT"))
-		poolSize, _ := strconv.Atoi(os.Getenv("REDIS_POOLSIZE"))
+		addr := fmt.Sprintf("%s:%s", os.Getenv("EKHOES_REDIS_HOST"), os.Getenv("EKHOES_REDIS_PORT"))
+		poolSize, _ := strconv.Atoi(os.Getenv("EKHOES_REDIS_POOLSIZE"))
 
 		_redisConn = redis.NewClient(&redis.Options{
 			Addr:     addr,
-			Password: os.Getenv("REDIS_PASSWORD"),
+			Password: os.Getenv("EKHOES_REDIS_PASSWORD"),
 			DB:       0,
 			PoolSize: poolSize,
 		})

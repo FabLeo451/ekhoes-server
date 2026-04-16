@@ -125,7 +125,7 @@ func OpenDatabase() error {
 		}
 	} else {
 		if config.PosgresEnabled() {
-			log.Printf("Connecting to database %s:%s...\n", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
+			log.Printf("Connecting to database %s:%s...\n", os.Getenv("EKHOES_DB_HOST"), os.Getenv("EKHOES_DB_PORT"))
 
 			_, err := ConnectAndKeepAlive()
 			if err != nil {
@@ -210,7 +210,7 @@ func CreateDatabase() error {
 			return err
 		}
 
-		script = strings.ReplaceAll(script, "{{DB_PASSWORD}}", os.Getenv("DB_PASSWORD"))
+		script = strings.ReplaceAll(script, "{{DB_PASSWORD}}", os.Getenv("EKHOES_DB_PASSWORD"))
 
 		_, err = DB_GetConnection().Exec(script)
 		if err != nil {

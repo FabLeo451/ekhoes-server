@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"ekhoes-server/auth"
-	"ekhoes-server/db"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -28,7 +27,7 @@ func GetSessionsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessions, err := auth.GetSessions(db.RedisGetConnection())
+	sessions, err := auth.GetSessions()
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

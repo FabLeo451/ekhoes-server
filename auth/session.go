@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
 
 	"log"
 )
@@ -140,10 +139,10 @@ func SetSessionActive(sessionId string, active bool) (Session, bool) {
 	return session, true
 }
 
-func GetSessions(rdb *redis.Client) ([]Session, error) {
+func GetSessions() ([]Session, error) {
 	var sessions []Session
 
-	keys, err := db.GetKeysByPattern("*")
+	keys, err := db.GetKeysByPattern("ses:*")
 	if err != nil {
 		return nil, err
 	}

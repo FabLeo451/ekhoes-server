@@ -42,42 +42,55 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(string(dump))
 		fmt.Println("===== END REQUEST =====")
 	*/
-	token := ""
 
-	// Check cookie
-	//token = r.Header.Get("cookie-ekhoes")
+	// Check if user has a token (cookie or query parameter)
+
+	token := ""
+	sessionId := ""
+	userEmail := "Unknown"
+
 	cookie, err := r.Cookie("cookie-ekhoes")
 	if err == nil {
 		token = cookie.Value
 	} else {
 		token = r.URL.Query().Get("token")
 	}
+
 	//fmt.Println("token:", token)
 
-	// Read the temporary token
-	if token == "" {
-		token = r.URL.Query().Get("token")
-	}
+	if token != "" {
+		sessionId, err = auth.VerifyJWT(token)
 
-	//fmt.Println("Token:", token)
+		if err != nil {
+			log.Println("Can't decode token:", err)
+			return
+		}
 
-	if token == "" {
-		http.Error(w, "Missing token", http.StatusUnauthorized)
-		return
-	}
+		sess, found := auth.SetSessionActive(sessionId, true)
 
-	sessionId, err := auth.VerifyJWT(token)
+		if !found {
+			log.Printf("Session not found in websocket connection handler: %s\n", sessionId)
+			return
+		}
 
-	if err != nil {
-		log.Println("Can't decode token:", err)
-		return
-	}
+		userEmail = sess.User.Email
 
-	sess, found := auth.SetSessionActive(sessionId, true)
+		/*
+			sess, found := auth.SetSessionActive(sessionId, true)
 
-	if !found {
-		log.Printf("Session not found in websocket connection handler: %s\n", sessionId)
-		return
+			if !found {
+				log.Printf("Session not found in websocket connection handler: %s\n", sessionId)
+				_ = conn.WriteMessage(
+					websocket.CloseMessage,
+					websocket.FormatCloseMessage(
+						websocket.ClosePolicyViolation, // 1008
+						"Session not found",
+					),
+				)
+				//conn.Close()
+				return
+			}
+		*/
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -85,31 +98,15 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error upgrading WebSocket:", err)
 		return
 	}
-	/*
-		sess, found := auth.SetSessionActive(sessionId, true)
 
-		if !found {
-			log.Printf("Session not found in websocket connection handler: %s\n", sessionId)
-			_ = conn.WriteMessage(
-				websocket.CloseMessage,
-				websocket.FormatCloseMessage(
-					websocket.ClosePolicyViolation, // 1008
-					"Session not found",
-				),
-			)
-			//conn.Close()
-			return
-		}
-	*/
+	log.Printf("%s connected\n", userEmail)
 
-	log.Printf("%s connected\n", sess.User.Email)
-
-	AddConnection(conn, sessionId, sess.User.Email)
+	AddConnection(conn, sessionId, userEmail)
 
 	defer func() {
 		RemoveConnection(sessionId)
 		conn.Close()
-		log.Printf("%s disconnected\n", sess.User.Email)
+		log.Printf("%s disconnected\n", userEmail)
 		auth.SetSessionActive(sessionId, false)
 	}()
 

@@ -2,7 +2,6 @@ package herenow
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,69 +13,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 )
-
-/**
- * Handler for websocket messages
- */
-func MessageHandler(userId string, msgType string, subtype string, payload string) (string, error) {
-
-	//log.Printf("Received message of type '%s/%s': %s\n", message.Type, message.Subtype, message.Text)
-
-	switch msgType {
-	case "map":
-
-		var hotspots []Hotspot
-
-		switch subtype {
-		case "byPosition":
-
-			var loc Location
-
-			err := json.Unmarshal([]byte(payload), &loc)
-
-			if err != nil {
-				e := fmt.Sprintf("Error parsing location string: %v\n", err)
-				return "", errors.New(e)
-			}
-
-			hotspots = getNearbyHotspot(loc.Latitude, loc.Longitude)
-
-		case "getHotspotsByBoundaries":
-
-			var boundaries Boundaries
-
-			err := json.Unmarshal([]byte(payload), &boundaries)
-
-			//fmt.Printf("%+v\n", boundaries)
-
-			if err != nil {
-				e := fmt.Sprintf("Error parsing boundaries string: %v\n", err)
-				return "", errors.New(e)
-			}
-
-			hotspots = getHotspotsInBoundaries(userId, boundaries)
-
-		default:
-			e := fmt.Sprintf("Unespected subtype: %s\n", subtype)
-			return "", errors.New(e)
-		}
-
-		//fmt.Printf("Hotspots found: %d\n", len(hotspots))
-
-		jsonBytes, err := json.Marshal(hotspots)
-		if err != nil {
-			return "", err
-		}
-
-		jsonString := string(jsonBytes)
-
-		return jsonString, nil
-
-	default:
-		e := fmt.Sprintf("Unespected type: %s\n", subtype)
-		return "", errors.New(e)
-	}
-}
 
 func addCorsHeaders(w http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")

@@ -26,10 +26,11 @@ var thisModule module.Module
 
 func Register() {
 	thisModule = module.Module{
-		Id:       "herenow",
-		Name:     "HereNow",
-		InitFunc: Init,
-		Install:  Install,
+		Id:        "herenow",
+		Name:      "HereNow",
+		InitFunc:  Init,
+		Install:   Install,
+		WsHandler: WsHandler,
 	}
 	module.Register(thisModule)
 }

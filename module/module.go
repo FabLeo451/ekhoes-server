@@ -1,6 +1,7 @@
 package module
 
 import (
+	"ekhoes-server/websocket"
 	"fmt"
 	"log"
 	"os"
@@ -15,6 +16,7 @@ type Module struct {
 	InitFunc    func(*chi.Mux) error
 	Install     func() error
 	PostInstall func(...interface{}) error
+	WsHandler   func(websocket.Message, websocket.Message) error
 }
 
 // var modules map[string]Module

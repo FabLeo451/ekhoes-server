@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -9,7 +8,6 @@ import (
 	"log"
 
 	"ekhoes-server/auth"
-	"ekhoes-server/module/cli"
 
 	//"websocket-server/herenow"
 
@@ -17,9 +15,9 @@ import (
 )
 
 type Message struct {
-	AppId     string `json:"appId"`
-	MessageId string `json:"messageId"`
-	Payload   string `json:"payload"`
+	AppId   string          `json:"appId"`
+	Type    string          `json:"type"`
+	Payload json.RawMessage `json:"payload"`
 }
 
 // Struttura per il WebSocket
@@ -133,13 +131,15 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		bytes, err := base64.StdEncoding.DecodeString(msg.Payload)
-		if err != nil {
-			log.Println("Unable to decode payload from bas64:", err)
-			continue
-		}
+		/*
+			bytes, err := base64.StdEncoding.DecodeString(msg.Payload)
+			if err != nil {
+				log.Println("Unable to decode payload from bas64:", err)
+				continue
+			}
 
-		payload := string(bytes)
+			payload := string(bytes)
+		*/
 
 		// Process message
 
@@ -166,14 +166,15 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 				}
 		*/
 
-		case "cli":
-			_ = cli.MessageHandler(conn, "", payload)
+		//case "cli":
+		//	_ = cli.MessageHandler(conn, "", payload)
 
 		default:
-			if msg.MessageId == "ping" {
+			if msg.Type == "ping" {
 				now := time.Now().UTC()
 				isoString := now.Format(time.RFC3339)
-				reply = Message{MessageId: "pong", Payload: isoString}
+				payload, _ := json.Marshal(isoString)
+				reply = Message{Type: "pong", Payload: payload}
 
 				jsonStr, _ := json.Marshal(reply)
 
@@ -182,7 +183,7 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 			} else {
-				log.Printf("Unhandled message from app '%s' message id '%s': %s\n", msg.AppId, msg.MessageId, payload)
+				log.Printf("Unhandled message from app '%s' %v\n", msg.AppId, msg)
 				//reply = Message{Type: "default", Text: "Hello from websocket server"}
 			}
 		}

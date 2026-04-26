@@ -5,41 +5,41 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 )
 
-type Payload struct {
-	QueryId    string     `json:"queryId"`
+type Query struct {
+	Id         string     `json:"id"`
 	Boundaries Boundaries `json:"boundaries"`
 }
 
 func WsHandler(in common.Message, out common.Message) error {
 
-	//log.Printf("Received message of type '%s/%s': %s\n", message.Type, message.Subtype, message.Text)
-
-	var payload Payload
-
-	err := json.Unmarshal(in.Payload, &payload)
-
-	if err != nil {
-		return err
-	}
+	//log.Printf("Received message of type '%s': %s\n", in.Type, in.Payload)
 
 	switch in.Type {
-	case "auth":
+	/*
+		case "auth":
+			switch payload.QueryId {
+			case "loginGuest":
+				log.Println("Authorizing guest...")
+				out.Payload, _ = json.Marshal("12345")
 
-		switch payload.QueryId {
-		case "loginGuest":
-			log.Println("Authorizing guest...")
-			out.Payload, _ = json.Marshal("12345")
+			default:
+				e := fmt.Sprintf("Unespected query: %s\n", payload.QueryId)
+				return errors.New(e)
+			}
+	*/
+	case "query":
 
-		default:
-			e := fmt.Sprintf("Unespected query: %s\n", payload.QueryId)
-			return errors.New(e)
+		var query Query
+
+		err := json.Unmarshal(in.Payload, &query)
+
+		if err != nil {
+			return err
 		}
 
-	case "query":
-		switch payload.QueryId {
+		switch query.Id {
 		case "getHotspotsByBoundaries":
 			/*
 				var hotspots []Hotspot
@@ -61,7 +61,7 @@ func WsHandler(in common.Message, out common.Message) error {
 			break
 
 		default:
-			e := fmt.Sprintf("Unespected query: %s\n", payload.QueryId)
+			e := fmt.Sprintf("Unespected query: %s\n", query.Id)
 			return errors.New(e)
 		}
 

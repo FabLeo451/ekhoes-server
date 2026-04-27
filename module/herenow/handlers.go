@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"ekhoes-server/auth"
 	"ekhoes-server/db"
@@ -28,30 +29,58 @@ func addCorsHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 }
 
-/*
-func checkAuthorization(r *http.Request) (jwt.MapClaims, error) {
+func CreateGuestSession(w http.ResponseWriter, r *http.Request) {
+	var credentials auth.Credentials
 
-	token := r.Header.Get("Authorization")
-
-	//fmt.Printf("[createHotSpot] Authorization: %s\n", token)
-
-	if token == "" {
-		return nil, errors.New("missing Authorization header")
-	}
-
-	claims, err := auth.DecodeJWT(token)
+	err := json.NewDecoder(r.Body).Decode(&credentials)
 
 	if err != nil {
-		return nil, errors.New("invalid token")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	if claims["userId"].(string) == "" {
-		return nil, errors.New("missing user id in token")
+	user := auth.User{
+		Name: "Guest",
 	}
 
-	return claims, nil
+	ttl := 1 * time.Minute
+
+	// Create session
+
+	session := auth.Session{
+		User:       user,
+		Agent:      credentials.Agent,
+		Platform:   credentials.Platform,
+		Model:      credentials.Model,
+		DeviceName: credentials.DeviceName,
+		DeviceType: credentials.DeviceType,
+		Ip:         r.RemoteAddr,
+	}
+	sessionId, err := auth.CreateSession(thisModule.Id, session, ttl)
+
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Error creating session", http.StatusInternalServerError)
+		return
+	}
+
+	// Create token
+
+	expiresAt := time.Now().Add(ttl)
+
+	token, err := auth.GenerateJWT(sessionId, user.Id, credentials.Email, user.Name, "", "", expiresAt)
+
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Error generating token", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(fmt.Sprintf(`{"token":"%s", "name":"%s", "id":"%s" }`, token, user.Name, user.Id)))
+	w.WriteHeader(http.StatusOK)
 }
-*/
+
 /**
  * get /hotspot/[id]
  * If id is missing, return all hotspots owned by logged user

@@ -62,9 +62,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var expiresAt *time.Time = nil
-
-	token, err := auth.GenerateJWT(sessionId, authRes.User.Id, credentials.Email, authRes.User.Name, authRes.User.Roles, authRes.User.Privileges, expiresAt)
+	token, err := auth.GenerateJWT(sessionId, authRes.User.Id, credentials.Email, authRes.User.Name, authRes.User.Roles, authRes.User.Privileges, time.Time{})
 
 	if err != nil {
 		log.Println(err)

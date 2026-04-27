@@ -88,9 +88,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 		// Create token
 
-		var expiresAt *time.Time = nil
-
-		token, err := auth.GenerateJWT(sessionId, user.Id, credentials.Email, user.Name, "", "", expiresAt)
+		token, err := auth.GenerateJWT(sessionId, user.Id, credentials.Email, user.Name, "", "", time.Time{})
 
 		if err != nil {
 			log.Println(err)

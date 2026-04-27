@@ -18,7 +18,7 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateJWT(sessionId, userId, email, name string, roles string, privileges string, ttl *time.Time) (string, error) {
+func GenerateJWT(sessionId, userId, email, name string, roles string, privileges string, expiresAt time.Time) (string, error) {
 
 	claims := CustomClaims{
 		SessionId:  sessionId,
@@ -34,8 +34,8 @@ func GenerateJWT(sessionId, userId, email, name string, roles string, privileges
 		},
 	}
 
-	if ttl != nil {
-		claims.ExpiresAt = jwt.NewNumericDate(*ttl)
+	if !expiresAt.IsZero() {
+		claims.ExpiresAt = jwt.NewNumericDate(expiresAt)
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

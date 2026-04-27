@@ -37,11 +37,12 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("===== END REQUEST =====")
 	*/
 
-	// Check if user has a token (cookie or query parameter)
-
 	token := ""
 	sessionId := ""
-	userEmail := "Unknown"
+	userName := "Unknown"
+	userEmail := ""
+
+	// Check if user has a token (cookie or query parameter)
 
 	cookie, err := r.Cookie("cookie-ekhoes")
 	if err == nil {
@@ -93,7 +94,7 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("%s connected\n", userEmail)
+	log.Printf("%s %s connected\n", userName, userEmail)
 
 	AddConnection(conn, sessionId, userEmail)
 

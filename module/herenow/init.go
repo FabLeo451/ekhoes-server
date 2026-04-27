@@ -45,6 +45,7 @@ func Init(r *chi.Mux) error {
 
 	r.Route(root, func(r chi.Router) {
 		r.Post("/login", Login)
+		r.Post("/session/guest", CreateGuestSession)
 
 		r.Route("/hotspot", func(r chi.Router) {
 			// GET /hotspot

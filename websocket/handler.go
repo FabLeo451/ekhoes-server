@@ -55,9 +55,9 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token := ""
-	sessionId := ""
-	userName := "Unknown"
-	userEmail := ""
+	wsConn := WebsocketConnection{
+		Conn: conn,
+	}
 
 	// Check if user has a token (cookie or query parameter)
 
@@ -71,7 +71,7 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println("token:", token)
 
 	if token != "" {
-		sessionId, err = auth.VerifyJWT(token)
+		wsConn.SessionId, err = auth.VerifyJWT(token)
 
 		if err != nil {
 			log.Println(err)
@@ -79,26 +79,27 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		sess, found := auth.SetSessionActive(sessionId, true)
+		sess, found := auth.SetSessionActive(wsConn.SessionId, true)
 
 		if !found {
-			log.Printf("Session not found in websocket connection handler: %s\n", sessionId)
+			log.Printf("Session not found in websocket connection handler: %s\n", wsConn.SessionId)
 			closeOnError(conn, websocket.ClosePolicyViolation /* 1008 */, "Session not found")
 			return
 		}
 
-		userEmail = sess.User.Email
+		wsConn.Name = sess.User.Name
+		wsConn.Email = sess.User.Email
 	}
 
-	log.Printf("%s %s connected\n", userName, userEmail)
+	log.Printf("%s %s connected\n", wsConn.Name, wsConn.Email)
 
-	AddConnection(conn, sessionId, userEmail)
+	AddConnection(wsConn)
 
 	defer func() {
-		RemoveConnection(sessionId)
+		RemoveConnection(wsConn.SessionId)
 		conn.Close()
-		log.Printf("%s disconnected\n", userEmail)
-		auth.SetSessionActive(sessionId, false)
+		log.Printf("%s %s disconnected\n", wsConn.Name, wsConn.Email)
+		auth.SetSessionActive(wsConn.SessionId, false)
 	}()
 
 	for {
@@ -171,8 +172,6 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-
-	log.Printf("Disonnected\n")
 }
 
 /**

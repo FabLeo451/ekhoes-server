@@ -10,6 +10,7 @@ import (
 type WebsocketConnection struct {
 	Conn             *websocket.Conn `json:"conn"`
 	SessionId        string          `json:"sessionId"`
+	Name             string          `json:"name"`
 	Email            string          `json:"email"`
 	Created          time.Time       `json:"created"`
 	LastActivity     string          `json:"lastActivity"`
@@ -38,16 +39,13 @@ func GetConnectionsCount() int32 {
 	return int32(len(connections))
 }
 
-func AddConnection(conn *websocket.Conn, sessionId string, email string) {
+func AddConnection(wsConn WebsocketConnection) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	connections = append(connections, WebsocketConnection{
-		Conn:      conn,
-		SessionId: sessionId,
-		Email:     email,
-		Created:   time.Now().UTC(),
-	})
+	wsConn.Created = time.Now().UTC()
+
+	connections = append(connections, wsConn)
 
 	//fmt.Println(connections)
 }

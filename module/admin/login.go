@@ -44,8 +44,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	sessionId := ""
 
 	if !nosession {
-
-		sessionId, err = auth.CreateSession("eks", credentials, authRes.User, r.RemoteAddr)
+		session := auth.Session{
+			User:       authRes.User,
+			Agent:      credentials.Agent,
+			Platform:   credentials.Platform,
+			Model:      credentials.Model,
+			DeviceName: credentials.DeviceName,
+			DeviceType: credentials.DeviceType,
+			Ip:         r.RemoteAddr,
+		}
+		sessionId, err = auth.CreateSession(thisModule.Id, session)
 
 		if err != nil {
 			log.Println(err)

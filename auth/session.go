@@ -53,17 +53,12 @@ type Session struct {
 	}
 */
 
-func CreateSession(appId string, credentials Credentials, authenticatedUser User, remoteIp string) (string, error) {
-	session := Session{
-		User:       authenticatedUser,
-		Agent:      credentials.Agent,
-		Platform:   credentials.Platform,
-		Model:      credentials.Model,
-		DeviceName: credentials.DeviceName,
-		DeviceType: credentials.DeviceType,
-		Ip:         remoteIp,
-		Status:     "idle",
-		Updated:    time.Now().UTC(),
+func CreateSession(appId string, session Session) (string, error) {
+	session.Created = time.Now().UTC()
+	session.Updated = time.Now().UTC()
+
+	if session.Status == "" {
+		session.Status = "idle"
 	}
 
 	data, err := json.Marshal(session)

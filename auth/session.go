@@ -30,6 +30,7 @@ type Session struct {
 	DeviceType string    `json:"deviceType"`
 	Ip         string    `json:"ip"`
 	Status     string    `json:"status"`
+	Created    time.Time `json:"created"`
 	Updated    time.Time `json:"updated"`
 }
 

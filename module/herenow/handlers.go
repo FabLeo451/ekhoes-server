@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"ekhoes-server/auth"
+	"ekhoes-server/config"
 	"ekhoes-server/db"
 
 	"github.com/go-chi/chi/v5"
@@ -33,7 +34,6 @@ func welcomeGuest(credentials auth.Credentials, remoteAddr string) (string, erro
 	user := auth.User{
 		Name: "Guest",
 	}
-	ttl := 5 * time.Minute
 
 	session := auth.Session{
 		User:       user,
@@ -44,7 +44,7 @@ func welcomeGuest(credentials auth.Credentials, remoteAddr string) (string, erro
 		DeviceType: credentials.DeviceType,
 		Ip:         remoteAddr,
 	}
-	sessionId, err := auth.CreateSession(thisModule.Id, session, ttl)
+	sessionId, err := auth.CreateSession(thisModule.Id, session, time.Duration(config.TTL_Session()))
 
 	if err != nil {
 		return "", err
@@ -52,7 +52,13 @@ func welcomeGuest(credentials auth.Credentials, remoteAddr string) (string, erro
 
 	// Create token
 
-	token, err := auth.GenerateJWT(sessionId, user.Id, credentials.Email, user.Name, "", "", time.Now().Add(time.Minute))
+	token, err := auth.GenerateJWT(sessionId,
+		user.Id,
+		credentials.Email,
+		user.Name,
+		"",
+		"",
+		time.Now().Add(time.Duration(config.TTL_Token())))
 
 	if err != nil {
 		return "", err
@@ -77,9 +83,7 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 	sessionId := ""
 	token := ""
 
-	user := auth.User{
-		Name: "Guest",
-	}
+	user := auth.User{}
 
 	// Get client info
 
@@ -132,6 +136,8 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
+
+		user.Name, user.Id = sess.User.Name, sess.User.Id
 
 		if !valid {
 			// Regenerate token

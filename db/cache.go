@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -15,8 +16,9 @@ import (
 )
 
 var (
-	cache *gocache.Cache
-	ctx   = context.Background()
+	cache       *gocache.Cache
+	ctx         = context.Background()
+	KeyNotFound = errors.New("not found")
 )
 
 func OpenCache() error {
@@ -138,9 +140,15 @@ func Get(key string) (string, error) {
 
 	if config.RedisEnabled() {
 		val, err = RedisGetConnection().Get(ctx, key).Result()
+
+		if err == redis.Nil {
+			err = KeyNotFound
+		}
 	} else {
 		if i, found := cache.Get(key); found {
 			val = fmt.Sprintf("%s", i)
+		} else {
+			err = KeyNotFound
 		}
 	}
 

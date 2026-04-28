@@ -73,3 +73,25 @@ func JWTSecret() string {
 func InstanceName() string {
 	return os.Getenv("EKHOES_INSTANCE_NAME")
 }
+
+func TTL_Session() int {
+	ttl := 1440
+
+	if os.Getenv("EKHOES_TTL_SESSION") != "" {
+		ttl, _ = strconv.Atoi(os.Getenv("EKHOES_TTL_SESSION"))
+
+	}
+
+	return ttl
+}
+
+func TTL_Token() int {
+	ttl := 1440
+
+	if os.Getenv("EKHOES_TTL_TOKEN") != "" {
+		ttl, _ = strconv.Atoi(os.Getenv("EKHOES_TTL_TOKEN"))
+
+	}
+
+	return ttl
+}

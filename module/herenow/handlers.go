@@ -30,7 +30,7 @@ func addCorsHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 }
 
-func welcomeGuest(credentials auth.Credentials, remoteAddr string) (string, error) {
+func welcomeGuest(credentials auth.Credentials, remoteAddr string) (auth.Session, string, error) {
 	user := auth.User{
 		Name: "Guest",
 	}
@@ -44,10 +44,10 @@ func welcomeGuest(credentials auth.Credentials, remoteAddr string) (string, erro
 		DeviceType: credentials.DeviceType,
 		Ip:         remoteAddr,
 	}
-	sessionId, err := auth.CreateSession(thisModule.Id, session, time.Duration(config.TTL_Session()))
+	sessionId, err := auth.CreateSession(thisModule.Id, session, time.Duration(config.TTL_Session())*time.Minute)
 
 	if err != nil {
-		return "", err
+		return session, "", err
 	}
 
 	// Create token
@@ -61,10 +61,10 @@ func welcomeGuest(credentials auth.Credentials, remoteAddr string) (string, erro
 		time.Now().Add(time.Duration(config.TTL_Token())))
 
 	if err != nil {
-		return "", err
+		return session, "", err
 	}
 
-	return token, nil
+	return session, token, nil
 }
 
 func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -82,6 +82,7 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	sessionId := ""
 	token := ""
+	var sess auth.Session
 
 	user := auth.User{}
 
@@ -105,7 +106,7 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if token == "" {
 		// Create guest session
-		token, err = welcomeGuest(credentials, r.RemoteAddr)
+		sess, token, err = welcomeGuest(credentials, r.RemoteAddr)
 
 		if err != nil {
 			log.Println(err)
@@ -129,26 +130,28 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Retrieve session
 
-		sess, err := auth.GetSession(sessionId)
+		sess, err = auth.GetSession(sessionId)
 
-		if err != nil {
+		if err == auth.SessionNotFound {
+			sess, token, err = welcomeGuest(credentials, r.RemoteAddr)
+		} else if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
-		}
+		} else {
+			if !valid {
+				// Regenerate token
 
-		user.Name, user.Id = sess.User.Name, sess.User.Id
+				token, err = auth.GenerateJWT(sessionId, sess.User.Id, credentials.Email, sess.User.Name, "", "", time.Now().Add(time.Minute))
 
-		if !valid {
-			// Regenerate token
-
-			token, err = auth.GenerateJWT(sessionId, sess.User.Id, credentials.Email, sess.User.Name, "", "", time.Now().Add(time.Minute))
-
-			if err != nil {
-				log.Println(err)
-				http.Error(w, "Error regenerating token", http.StatusInternalServerError)
-				return
+				if err != nil {
+					log.Println(err)
+					http.Error(w, "Error regenerating token", http.StatusInternalServerError)
+					return
+				}
 			}
+
+			user.Name, user.Id = sess.User.Name, sess.User.Id
 		}
 	}
 

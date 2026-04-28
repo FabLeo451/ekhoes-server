@@ -86,7 +86,7 @@ func TTL_Session() int {
 }
 
 func TTL_Token() int {
-	ttl := 1440
+	ttl := 30
 
 	if os.Getenv("EKHOES_TTL_TOKEN") != "" {
 		ttl, _ = strconv.Atoi(os.Getenv("EKHOES_TTL_TOKEN"))

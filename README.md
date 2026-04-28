@@ -45,6 +45,8 @@ ekhoes-server [command] --help
 | -------------- | --------------------------------------------- |
 | EKHOES_INSTANCE_NAME | Name of the instance shown in the root page |
 | EKHOES_PORT | Port the server will listen on |
+| EKHOES_TTL_SESSION | Session TTL in minutes |
+| EKHOES_TTL_TOKEN | Token TTL in minutes |
 | EKHOES_DB_ENABLED | If true, server will connect to Postgres database at startup |
 | EKHOES_DB_HOST | Database hostname or ip address |
 | EKHOES_DB_PORT | Database port |

@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"ekhoes-server/utils"
 	"sync"
 	"time"
 
@@ -8,13 +9,12 @@ import (
 )
 
 type WebsocketConnection struct {
-	Conn             *websocket.Conn `json:"conn"`
-	SessionId        string          `json:"sessionId"`
-	Name             string          `json:"name"`
-	Email            string          `json:"email"`
-	Created          time.Time       `json:"created"`
-	LastActivity     string          `json:"lastActivity"`
-	LastActivityTime time.Time       `json:"lastActivityTime"`
+	Conn         *websocket.Conn `json:"conn"`
+	ConnectionId string          `json:"connectionId"`
+	SessionId    string          `json:"sessionId"`
+	Name         string          `json:"name"`
+	Email        string          `json:"email"`
+	Created      time.Time       `json:"created"`
 }
 
 var (
@@ -43,6 +43,7 @@ func AddConnection(wsConn WebsocketConnection) {
 	mu.Lock()
 	defer mu.Unlock()
 
+	wsConn.ConnectionId = utils.ULID()
 	wsConn.Created = time.Now().UTC()
 
 	connections = append(connections, wsConn)
@@ -62,18 +63,20 @@ func RemoveConnection(sessionId string) {
 	}
 }
 
-func UpdateConnection(sessionId string, activity string) {
-	mu.Lock()
-	defer mu.Unlock()
+/*
+	func UpdateConnection(sessionId string, activity string) {
+		mu.Lock()
+		defer mu.Unlock()
 
-	for i := range connections {
-		if connections[i].SessionId == sessionId {
-			connections[i].LastActivity = activity
-			connections[i].LastActivityTime = time.Now().UTC()
-			return
+		for i := range connections {
+			if connections[i].SessionId == sessionId {
+				connections[i].LastActivity = activity
+				connections[i].LastActivityTime = time.Now().UTC()
+				return
+			}
 		}
 	}
-}
+*/
 
 func GetWebsocketConnection(sessionId string) *WebsocketConnection {
 	mu.Lock()

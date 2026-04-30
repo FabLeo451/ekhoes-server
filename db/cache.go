@@ -119,6 +119,20 @@ func Update(key string, value interface{}) error {
 	return err
 }
 
+func UpdateTTL(key string, ttl time.Duration) error {
+	var err error
+
+	if config.RedisEnabled() {
+		err = RedisGetConnection().Expire(ctx, key, ttl).Err()
+	} else {
+		if val, found := cache.Get(key); found {
+			cache.SetWithTTL(key, val, ttl)
+		}
+	}
+
+	return err
+}
+
 func GetKeysByPattern(pattern string) ([]string, error) {
 	var err error
 	var keys []string

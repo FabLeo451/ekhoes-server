@@ -153,9 +153,14 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		} else {
-			utils.Debug("Session found")
+			utils.Debug("Session found. Extending TTL...")
+
+			db.UpdateTTL(sessionId, time.Duration(config.TTL_Session()))
+
 			if !valid {
 				// Regenerate token
+
+				utils.Debug("Regenerating token...")
 
 				token, err = auth.GenerateJWT(sessionId, sess.User.Id, credentials.Email, sess.User.Name, "", "", time.Now().Add(time.Minute))
 

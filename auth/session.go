@@ -161,5 +161,7 @@ func GetSession(id string) (Session, error) {
 
 	err = json.Unmarshal([]byte(val), &sess)
 
+	sess.TTL = db.GetTTL(id)
+
 	return sess, err
 }

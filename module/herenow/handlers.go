@@ -12,6 +12,7 @@ import (
 	"ekhoes-server/auth"
 	"ekhoes-server/config"
 	"ekhoes-server/db"
+	"ekhoes-server/utils"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -108,6 +109,8 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if token == "" {
 		// Create guest session
+		utils.Debug("Creating guest session")
+
 		sess, token, err = welcomeGuest(credentials, r.RemoteAddr)
 
 		if err != nil {
@@ -121,10 +124,12 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// Decode token
 
+		utils.Debug("Decoding token")
+
 		claims, valid, err := auth.DecodeJWT(token)
 
 		if err != nil {
-			log.Println(err)
+			utils.Error(err.Error())
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
@@ -138,19 +143,21 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 		sess, err = auth.GetSession(sessionId)
 
 		if err == auth.SessionNotFound {
+			utils.Debug("Session not found")
 			sess, token, err = welcomeGuest(credentials, r.RemoteAddr)
 		} else if err != nil {
-			log.Println(err)
+			utils.Err(err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		} else {
+			utils.Debug("Session found")
 			if !valid {
 				// Regenerate token
 
 				token, err = auth.GenerateJWT(sessionId, sess.User.Id, credentials.Email, sess.User.Name, "", "", time.Now().Add(time.Minute))
 
 				if err != nil {
-					log.Println(err)
+					utils.Err(err)
 					http.Error(w, "Error regenerating token", http.StatusInternalServerError)
 					return
 				}
@@ -169,6 +176,8 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 		user.Id,
 		user.IsGuest,
 		user.IsUSer)
+
+	utils.Debug("%w", data)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(data))

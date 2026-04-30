@@ -24,3 +24,7 @@ func Error(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
 	log.Printf("[ERROR] %s", msg)
 }
+
+func Err(err error) {
+	log.Printf("[ERROR] %s", err.Error())
+}

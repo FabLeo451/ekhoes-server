@@ -32,6 +32,8 @@ func addCorsHeaders(w http.ResponseWriter, r *http.Request) {
 }
 
 func welcomeGuest(credentials auth.Credentials, remoteAddr string) (auth.Session, string, error) {
+	utils.Debug("Creating guest session")
+
 	user := auth.User{
 		Name:    "Guest",
 		IsGuest: true,
@@ -47,6 +49,7 @@ func welcomeGuest(credentials auth.Credentials, remoteAddr string) (auth.Session
 		DeviceType: credentials.DeviceType,
 		Ip:         remoteAddr,
 	}
+
 	sessionId, err := auth.CreateSession(thisModule.Id, session, time.Duration(config.TTL_Session())*time.Minute)
 
 	if err != nil {
@@ -109,7 +112,7 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if token == "" {
 		// Create guest session
-		utils.Debug("Creating guest session")
+		utils.Debug("Client doesn't have a token")
 
 		sess, token, err = welcomeGuest(credentials, r.RemoteAddr)
 
@@ -129,7 +132,7 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 		claims, valid, err := auth.DecodeJWT(token)
 
 		if err != nil {
-			utils.Error(err.Error())
+			utils.Err(err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}

@@ -6,9 +6,18 @@ import (
 	"log"
 )
 
+const (
+	reset  = "\033[0m"
+	green  = "\033[32m"
+	yellow = "\033[33m"
+	red    = "\033[31m"
+	gray   = "\033[90m"
+	cyan   = "\033[36m" // azzurro
+)
+
 func Log(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
-	log.Printf("[INFO] %s", msg)
+	log.Printf("%s[INFO]%s %s", cyan, reset, msg)
 }
 
 func Debug(format string, a ...any) {
@@ -17,14 +26,14 @@ func Debug(format string, a ...any) {
 	}
 
 	msg := fmt.Sprintf(format, a...)
-	log.Printf("[DEBUG] %s", msg)
+	log.Printf("%s[DEBUG]%s %s", gray, reset, msg)
 }
 
 func Error(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
-	log.Printf("[ERROR] %s", msg)
+	log.Printf("%s[ERROR]%s %s", red, reset, msg)
 }
 
 func Err(err error) {
-	log.Printf("[ERROR] %s", err.Error())
+	log.Printf("%s[ERROR]%s %s", red, reset, err.Error())
 }

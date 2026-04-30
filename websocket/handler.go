@@ -10,6 +10,7 @@ import (
 	"ekhoes-server/auth"
 	"ekhoes-server/common"
 	"ekhoes-server/module"
+	"ekhoes-server/utils"
 
 	//"websocket-server/herenow"
 
@@ -70,35 +71,38 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 
 	//fmt.Println("token:", token)
 
-	if token != "" {
-		wsConn.SessionId, err = auth.VerifyJWT(token)
-
-		if err != nil {
-			log.Println(err)
-			closeOnError(conn, websocket.ClosePolicyViolation /* 1008 */, err.Error())
-			return
-		}
-
-		sess, found := auth.SetSessionActive(wsConn.SessionId, true)
-
-		if !found {
-			log.Printf("Session not found in websocket connection handler: %s\n", wsConn.SessionId)
-			closeOnError(conn, websocket.ClosePolicyViolation /* 1008 */, "Session not found")
-			return
-		}
-
-		wsConn.Name = sess.User.Name
-		wsConn.Email = sess.User.Email
+	if token == "" {
+		utils.Error("Missing token")
+		return
 	}
 
-	log.Printf("%s %s connected\n", wsConn.Name, wsConn.Email)
+	wsConn.SessionId, err = auth.VerifyJWT(token)
+
+	if err != nil {
+		utils.Err(err)
+		closeOnError(conn, websocket.ClosePolicyViolation /* 1008 */, err.Error())
+		return
+	}
+
+	sess, found := auth.SetSessionActive(wsConn.SessionId, true)
+
+	if !found {
+		utils.Error("Session not found in websocket connection handler: %s\n", wsConn.SessionId)
+		closeOnError(conn, websocket.ClosePolicyViolation /* 1008 */, "Session not found")
+		return
+	}
+
+	wsConn.Name = sess.User.Name
+	wsConn.Email = sess.User.Email
+
+	utils.Log("Connected %s %s\n", wsConn.Name, wsConn.Email)
 
 	AddConnection(&wsConn)
 
 	defer func() {
 		RemoveConnection(wsConn.SessionId, wsConn.ConnectionId)
 		conn.Close()
-		log.Printf("%s %s disconnected\n", wsConn.Name, wsConn.Email)
+		utils.Log("Disconnected %s %s\n", wsConn.Name, wsConn.Email)
 		auth.SetSessionActive(wsConn.SessionId, false)
 	}()
 

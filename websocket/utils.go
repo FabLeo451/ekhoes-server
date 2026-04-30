@@ -22,7 +22,6 @@ var (
 	mu          sync.RWMutex
 )
 
-// 🔍 Tutte le connessioni (flatten)
 func GetConnections() []*WebsocketConnection {
 	mu.RLock()
 	defer mu.RUnlock()
@@ -38,7 +37,6 @@ func GetConnections() []*WebsocketConnection {
 	return result
 }
 
-// 🔢 Count totale
 func GetConnectionsCount() int32 {
 	mu.RLock()
 	defer mu.RUnlock()
@@ -52,7 +50,6 @@ func GetConnectionsCount() int32 {
 	return count
 }
 
-// ➕ Aggiunta connessione
 func AddConnection(wsConn *WebsocketConnection) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -67,7 +64,6 @@ func AddConnection(wsConn *WebsocketConnection) {
 	connections[wsConn.SessionId][wsConn.ConnectionId] = wsConn
 }
 
-// ➖ Rimozione connessione
 func RemoveConnection(sessionId, connectionId string) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -81,7 +77,6 @@ func RemoveConnection(sessionId, connectionId string) {
 	}
 }
 
-// 🔍 Singola connessione (vera reference)
 func GetWebsocketConnection(sessionId, connectionId string) *WebsocketConnection {
 	mu.RLock()
 	defer mu.RUnlock()
@@ -95,7 +90,6 @@ func GetWebsocketConnection(sessionId, connectionId string) *WebsocketConnection
 	return nil
 }
 
-// ❌ Chiudi connessione
 func CloseConnection(conn *websocket.Conn, code int, reason string) {
 	_ = conn.WriteMessage(
 		websocket.CloseMessage,

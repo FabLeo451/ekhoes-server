@@ -51,6 +51,10 @@ func RedisEnabled() bool {
 	return os.Getenv("EKHOES_REDIS_ENABLED") == "true"
 }
 
+func Debug() bool {
+	return os.Getenv("EKHOES_DEBUG") == "true"
+}
+
 func Port() int {
 	port := 9876
 

@@ -6,13 +6,13 @@ import (
 )
 
 func Install() error {
-	utils.Log(thisModule, "Opening database...")
+	utils.Log("Opening database...")
 
 	if err := db.OpenDatabase(); err != nil {
 		return err
 	}
 
-	utils.Log(thisModule, "Creating schema...")
+	utils.Log("Creating schema...")
 
 	err := db.ExecuteSQL(SqlFS, "install.sql")
 

@@ -7,13 +7,13 @@ import (
 )
 
 func Install() error {
-	utils.Log(thisModule, "Opening database...")
+	utils.Log("Opening database...")
 
 	if err := db.OpenDatabase(); err != nil {
 		return err
 	}
 
-	utils.Log(thisModule, "Creating schema...")
+	utils.Log("Creating schema...")
 
 	err := db.ExecuteSQL(SqlFS, "install.sql")
 
@@ -42,7 +42,7 @@ func CreateAdmin(args ...interface{}) error {
 		}
 	}
 
-	utils.Log(thisModule, "Creating admin user %s...", email)
+	utils.Log("Creating admin user %s...", email)
 
 	if err := db.ExecuteSQL(SqlFS, "create_user.sql", "1000", "Administrator", email, "admin", "enabled"); err != nil {
 		return err

@@ -100,9 +100,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(fmt.Sprintf(`{"token":"%s", "name":"%s", "id":"%s" }`, token, user.Name, user.Id)))
 
-		utils.Log(thisModule, "%s successfully authenticated\n", credentials.Email)
+		utils.Log("%s successfully authenticated\n", credentials.Email)
 	} else {
-		utils.LogErr(thisModule, errors.New("Database unavailable"))
+		utils.Error("Database unavailable")
 		http.Error(w, "Database unavailable", http.StatusBadRequest)
 		return
 	}

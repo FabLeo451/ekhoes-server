@@ -31,7 +31,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	authRes, err := Authenticate(credentials.Email, credentials.Password)
 
 	if err != nil {
-		utils.LogErr(thisModule, err)
+		utils.Error(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -78,5 +78,5 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	//fmt.Println(token)
 
-	utils.Log(thisModule, "%s successfully authenticated\n", authRes.User.Email)
+	utils.Log("%s successfully authenticated\n", authRes.User.Email)
 }

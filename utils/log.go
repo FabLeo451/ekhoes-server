@@ -1,21 +1,26 @@
 package utils
 
 import (
-	"ekhoes-server/common"
+	"ekhoes-server/config"
 	"fmt"
 	"log"
 )
 
-func Log(m common.Module, format string, a ...any) {
+func Log(format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
-	log.Printf("[%s] %s", m.Id, msg)
+	log.Printf("[INFO] %s", msg)
 }
 
 func Debug(format string, a ...any) {
+	if !config.Debug() {
+		return
+	}
+
 	msg := fmt.Sprintf(format, a...)
 	log.Printf("[DEBUG] %s", msg)
 }
 
-func LogErr(m common.Module, err error) {
-	Log(m, "Error: %s", err.Error())
+func Error(format string, a ...any) {
+	msg := fmt.Sprintf(format, a...)
+	log.Printf("[ERROR] %s", msg)
 }

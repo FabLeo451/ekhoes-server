@@ -28,7 +28,7 @@ var thisModule common.Module
 
 func Register() {
 	thisModule = common.Module{
-		Id:        "herenow",
+		Id:        "hnw",
 		Name:      "HereNow",
 		InitFunc:  Init,
 		Install:   Install,

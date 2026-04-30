@@ -22,17 +22,18 @@ type User struct {
 }
 
 type Session struct {
-	Id         string    `json:"id"`
-	User       User      `json:"user"`
-	Agent      string    `json:"agent"`
-	Platform   string    `json:"platform"`
-	Model      string    `json:"model"`
-	DeviceName string    `json:"deviceName"`
-	DeviceType string    `json:"deviceType"`
-	Ip         string    `json:"ip"`
-	Status     string    `json:"status"`
-	Created    time.Time `json:"created"`
-	Updated    time.Time `json:"updated"`
+	Id         string        `json:"id"`
+	User       User          `json:"user"`
+	Agent      string        `json:"agent"`
+	Platform   string        `json:"platform"`
+	Model      string        `json:"model"`
+	DeviceName string        `json:"deviceName"`
+	DeviceType string        `json:"deviceType"`
+	Ip         string        `json:"ip"`
+	Status     string        `json:"status"`
+	Created    time.Time     `json:"created"`
+	Updated    time.Time     `json:"updated"`
+	TTL        time.Duration `json:"ttl"`
 }
 
 var SessionNotFound = errors.New("session not found")
@@ -141,6 +142,7 @@ func GetSessions() ([]Session, error) {
 		}
 
 		sess.Id = key
+		sess.TTL = db.GetTTL(key)
 
 		sessions = append(sessions, sess)
 	}

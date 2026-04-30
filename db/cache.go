@@ -133,6 +133,18 @@ func UpdateTTL(key string, ttl time.Duration) error {
 	return err
 }
 
+func GetTTL(key string) time.Duration {
+	var ttl time.Duration
+
+	if config.RedisEnabled() {
+		ttl, _ = RedisGetConnection().TTL(ctx, key).Result()
+	} else {
+		ttl, _ = cache.TTL(key)
+	}
+
+	return ttl
+}
+
 func GetKeysByPattern(pattern string) ([]string, error) {
 	var err error
 	var keys []string

@@ -32,17 +32,11 @@ func WsHandler(user auth.User, in common.Message, out *common.Message) error {
 		switch query.Id {
 		case "getHotspotsByBoundaries":
 			out.Type = "array"
-			var hotspots, ephemerals []Hotspot
 
 			//fmt.Printf("%+v\n", query.Boundaries)
 
-			if err != nil {
-				e := fmt.Sprintf("Error parsing boundaries string: %v\n", err)
-				return errors.New(e)
-			}
-
-			hotspots = getHotspotsInBoundaries(user.Id, query.Boundaries)
-			ephemerals = getEphemeralHotspots()
+			hotspots := getHotspotsInBoundaries(user.Id, query.Boundaries)
+			ephemerals := getEphemeralHotspots()
 			hotspots = append(hotspots, ephemerals...)
 
 			out.Payload, err = json.Marshal(hotspots)

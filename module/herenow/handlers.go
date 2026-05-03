@@ -59,13 +59,16 @@ func createGuestSession(credentials auth.Credentials, remoteAddr string) (auth.S
 
 	// Create token
 
-	token, err := auth.GenerateJWT(sessionId,
-		user.Id,
-		credentials.Email,
-		user.Name,
-		"",
-		"",
-		time.Now().Add(time.Duration(config.TTL_Token())*time.Minute))
+	claims := auth.CustomClaims{
+		SessionId: sessionId,
+		UserId:    user.Id,
+		Email:     credentials.Email,
+		Name:      user.Name,
+		IsUser:    false,
+		IsGuest:   true,
+	}
+
+	token, err := auth.GenerateJWT(claims, time.Now().Add(time.Duration(config.TTL_Token())*time.Minute))
 
 	if err != nil {
 		return session, "", err
@@ -158,7 +161,16 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 
 				utils.Debug("Regenerating token...")
 
-				token, err = auth.GenerateJWT(sessionId, sess.User.Id, credentials.Email, sess.User.Name, "", "", time.Now().Add(time.Minute))
+				newClaims := auth.CustomClaims{
+					SessionId: sessionId,
+					UserId:    sess.User.Id,
+					Email:     credentials.Email,
+					Name:      sess.User.Name,
+					IsUser:    sess.User.IsUSer,
+					IsGuest:   sess.User.IsGuest,
+				}
+
+				token, err = auth.GenerateJWT(newClaims, time.Now().Add(time.Minute))
 
 				if err != nil {
 					utils.Err(err)
@@ -319,14 +331,18 @@ func PostHotspot(w http.ResponseWriter, r *http.Request) {
 
 	addCorsHeaders(w, r)
 
-	claims, err := auth.CheckAuthorization(r)
+	claims, errAuth := auth.CheckAuthorization(r)
 
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+	if errAuth != nil {
+		http.Error(w, errAuth.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	var hotspot Hotspot
+	var (
+		hotspot    Hotspot
+		newHotspot *Hotspot
+		err        error
+	)
 
 	err = json.NewDecoder(r.Body).Decode(&hotspot)
 
@@ -342,7 +358,11 @@ func PostHotspot(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Creating hotspot %v\n", hotspot)
 
-	newHotspot, err := createHotspot(hotspot)
+	if claims["isUser"].(bool) {
+		newHotspot, err = createHotspot(hotspot)
+	} else {
+		newHotspot, err = createEphemeralHotspot(hotspot)
+	}
 
 	if err != nil {
 		log.Println(err)

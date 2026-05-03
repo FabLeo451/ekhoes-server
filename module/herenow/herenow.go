@@ -26,23 +26,23 @@ type Boundaries struct {
 }
 
 type Hotspot struct {
-	Id            string   `json:"id"`
-	Name          string   `json:"name"`
-	Description   string   `json:"description"`
-	Category      string   `json:"category"`
-	Owner         string   `json:"owner"`
-	OwnedByMe     bool     `json:"ownedByMe"`
-	Enabled       bool     `json:"enabled"`
-	Private       bool     `json:"private"`
-	Position      Location `json:"position"`
-	StartTime     string   `json:"startTime"`
-	EndTime       string   `json:"endTime"`
-	Likes         int64    `json:"likes"`
-	LikedByMe     bool     `json:"likedByMe"`
-	Subscriptions int64    `json:"subscriptions"`
-	Subscribed    bool     `json:"subscribed"`
-	Created       string   `json:"created"`
-	Updated       string   `json:"updated"`
+	Id            string    `json:"id"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	Category      string    `json:"category"`
+	Owner         string    `json:"owner"`
+	OwnedByMe     bool      `json:"ownedByMe"`
+	Enabled       bool      `json:"enabled"`
+	Private       bool      `json:"private"`
+	Position      Location  `json:"position"`
+	StartTime     string    `json:"startTime"`
+	EndTime       string    `json:"endTime"`
+	Likes         int64     `json:"likes"`
+	LikedByMe     bool      `json:"likedByMe"`
+	Subscriptions int64     `json:"subscriptions"`
+	Subscribed    bool      `json:"subscribed"`
+	Created       time.Time `json:"created"`
+	Updated       time.Time `json:"updated"`
 }
 
 type Category struct {
@@ -241,7 +241,7 @@ func createHotspot(hotspot Hotspot) (*Hotspot, error) {
 	) VALUES (
 		$1, $2, $3, $4, $5, $6, ST_SetSRID(ST_MakePoint($7, $8), 4326), $9, $10, $11
 	)
-	RETURNING created, updated`
+	`
 
 	var created, updated time.Time
 
@@ -251,13 +251,30 @@ func createHotspot(hotspot Hotspot) (*Hotspot, error) {
 		hotspot.StartTime, hotspot.EndTime, hotspot.Private,
 	).Scan(&created, &updated)
 
-	hotspot.Created = created.Format(time.RFC3339)
-	hotspot.Updated = updated.Format(time.RFC3339)
+	hotspot.Created = time.Now().UTC()
+	hotspot.Updated = time.Now().UTC()
 
 	if err != nil {
 		log.Println(err.Error())
 		return nil, err
 	}
+
+	return &hotspot, nil
+}
+
+func createEphemeralHotspot(hotspot Hotspot) (*Hotspot, error) {
+	hotspot.Id = uuid.New().String()
+	hotspot.Created = time.Now().UTC()
+	hotspot.Updated = time.Now().UTC()
+
+	key := fmt.Sprintf("app:%s:hotspot:%s", thisModule.Id, hotspot.Id)
+
+	dataStr, err := json.Marshal(hotspot)
+	if err != nil {
+		panic(err)
+	}
+
+	db.SetWithTTL(key, dataStr, 5*time.Minute)
 
 	return &hotspot, nil
 }

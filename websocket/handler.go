@@ -136,14 +136,16 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 
 		// Process message
 
-		var reply common.Message
+		reply := common.Message{
+			AppId: msg.AppId,
+		}
 
 		m, ok := module.GetModule(msg.AppId)
 
 		if ok {
 			// Module handler
 
-			err := m.WsHandler(msg, reply)
+			err := m.WsHandler(sess.User, msg, &reply)
 
 			if err != nil {
 				log.Printf("[%s] Error processing websocket message: %s", m.Name, err)
@@ -176,8 +178,10 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
+		utils.Debug("Replying... %s", string(replyBytes))
+
 		if err := conn.WriteMessage(websocket.TextMessage, replyBytes); err != nil {
-			log.Println("Error writing message:", err)
+			utils.Error("Error writing message: %s", err.Error())
 			break
 		}
 	}

@@ -1,6 +1,7 @@
 package herenow
 
 import (
+	"ekhoes-server/auth"
 	"ekhoes-server/common"
 	"ekhoes-server/utils"
 	"encoding/json"
@@ -13,7 +14,7 @@ type Query struct {
 	Boundaries Boundaries `json:"boundaries"`
 }
 
-func WsHandler(in common.Message, out common.Message) error {
+func WsHandler(user auth.User, in common.Message, out *common.Message) error {
 
 	utils.Debug("Received message of type '%s': %s\n", in.Type, in.Payload)
 
@@ -30,24 +31,23 @@ func WsHandler(in common.Message, out common.Message) error {
 
 		switch query.Id {
 		case "getHotspotsByBoundaries":
-			/*
-				var hotspots []Hotspot
+			var hotspots, ephemerals []Hotspot
 
-				//fmt.Printf("%+v\n", boundaries)
+			//fmt.Printf("%+v\n", query.Boundaries)
 
-				if err != nil {
-					e := fmt.Sprintf("Error parsing boundaries string: %v\n", err)
-					return errors.New(e)
-				}
+			if err != nil {
+				e := fmt.Sprintf("Error parsing boundaries string: %v\n", err)
+				return errors.New(e)
+			}
 
-				hotspots = getHotspotsInBoundaries(userId, payload.Boundaries)
+			hotspots = getHotspotsInBoundaries(user.Id, query.Boundaries)
+			ephemerals = getEphemeralHotspots()
+			hotspots = append(hotspots, ephemerals...)
 
-				out.Payload, err = json.Marshal(hotspots)
-				if err != nil {
-					return err
-				}
-			*/
-			break
+			out.Payload, err = json.Marshal(hotspots)
+			if err != nil {
+				return err
+			}
 
 		default:
 			e := fmt.Sprintf("Unespected query: %s\n", query.Id)

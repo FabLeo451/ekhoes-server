@@ -14,6 +14,7 @@ import (
 
 	"ekhoes-server/config"
 	"ekhoes-server/db"
+	"ekhoes-server/utils"
 )
 
 type Location struct {
@@ -264,7 +265,7 @@ func createHotspot(hotspot Hotspot) (*Hotspot, error) {
 }
 
 func createEphemeralHotspot(hotspot Hotspot) (*Hotspot, error) {
-	hotspot.Id = uuid.New().String()
+	hotspot.Id = hotspot.Owner
 	hotspot.Created = time.Now().UTC()
 	hotspot.Updated = time.Now().UTC()
 
@@ -278,6 +279,36 @@ func createEphemeralHotspot(hotspot Hotspot) (*Hotspot, error) {
 	db.SetWithTTL(key, dataStr, time.Duration(config.TTL_EphemeralHotspots())*time.Minute)
 
 	return &hotspot, nil
+}
+
+func getEphemeralHotspots() []Hotspot {
+	var hotspots []Hotspot
+
+	keyStart := fmt.Sprintf("app:%s:hotspot:*", thisModule.Id)
+
+	keys, err := db.GetKeysByPattern(keyStart)
+	if err != nil {
+		utils.Err(err)
+		return hotspots
+	}
+
+	for _, key := range keys {
+		val, err := db.Get(key)
+		if err != nil {
+			utils.Error("Error reading key %s: %v", key, err)
+			continue
+		}
+
+		var h Hotspot
+		if err := json.Unmarshal([]byte(val), &h); err != nil {
+			utils.Err(err)
+			continue
+		}
+
+		hotspots = append(hotspots, h)
+	}
+
+	return hotspots
 }
 
 /**

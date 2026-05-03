@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"ekhoes-server/auth"
 	"ekhoes-server/utils"
 	"sync"
 	"time"
@@ -90,10 +91,27 @@ func GetWebsocketConnection(sessionId, connectionId string) *WebsocketConnection
 	return nil
 }
 
-func CloseConnection(conn *websocket.Conn, code int, reason string) {
-	_ = conn.WriteMessage(
+func onDisconnect(wsConn *WebsocketConnection) {
+	RemoveConnection(wsConn.SessionId, wsConn.ConnectionId)
+	wsConn.Conn.Close()
+	auth.SetSessionActive(wsConn.SessionId, false)
+}
+
+func disconnect(wsConn *WebsocketConnection) {
+	_ = wsConn.Conn.WriteMessage(
 		websocket.CloseMessage,
-		websocket.FormatCloseMessage(code, reason),
+		websocket.FormatCloseMessage(
+			websocket.CloseServiceRestart,
+			"Connection closed server side",
+		),
 	)
-	conn.Close()
+	onDisconnect(wsConn)
+}
+
+func DiscnnectAll() {
+	for _, sessionMap := range connections {
+		for _, conn := range sessionMap {
+			disconnect(conn)
+		}
+	}
 }

@@ -101,10 +101,8 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 	AddConnection(&wsConn)
 
 	defer func() {
-		RemoveConnection(wsConn.SessionId, wsConn.ConnectionId)
-		conn.Close()
 		utils.Log("Disconnected %s %s\n", wsConn.Name, wsConn.Email)
-		auth.SetSessionActive(wsConn.SessionId, false)
+		onDisconnect(&wsConn)
 	}()
 
 	for {
@@ -116,7 +114,7 @@ func HandleConnection(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if websocket.IsCloseError(err, websocket.CloseGoingAway) {
 				//fmt.Println("Client ha chiuso la connessione (going away)")
-			} else {
+			} else if websocket.IsUnexpectedCloseError(err) {
 				utils.Error("Error reading message: %s", err)
 			}
 			break

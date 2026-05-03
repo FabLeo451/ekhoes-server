@@ -31,10 +31,11 @@ func addCorsHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 }
 
-func welcomeGuest(credentials auth.Credentials, remoteAddr string) (auth.Session, string, error) {
+func createGuestSession(credentials auth.Credentials, remoteAddr string) (auth.Session, string, error) {
 	utils.Debug("Creating guest session")
 
 	user := auth.User{
+		Id:      utils.UUID(),
 		Name:    "Guest",
 		IsGuest: true,
 		IsUSer:  false,
@@ -90,8 +91,6 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 	token := ""
 	var sess auth.Session
 
-	user := auth.User{}
-
 	// Get client info
 
 	var credentials auth.Credentials
@@ -114,16 +113,13 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 		// Create guest session
 		utils.Debug("Client doesn't have a token")
 
-		sess, token, err = welcomeGuest(credentials, r.RemoteAddr)
+		sess, token, err = createGuestSession(credentials, r.RemoteAddr)
 
 		if err != nil {
 			log.Println(err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-
-		user.IsGuest = true
-		user.IsUSer = false
 	} else {
 		// Decode token
 
@@ -147,7 +143,7 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 
 		if err == auth.SessionNotFound {
 			utils.Debug("Session not found")
-			sess, token, err = welcomeGuest(credentials, r.RemoteAddr)
+			sess, token, err = createGuestSession(credentials, r.RemoteAddr)
 		} else if err != nil {
 			utils.Err(err)
 			http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -170,20 +166,16 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			}
-
-			user.Name, user.Id = sess.User.Name, sess.User.Id
-			user.IsGuest = sess.User.IsGuest
-			user.IsUSer = sess.User.IsUSer
 		}
 	}
 
 	data := fmt.Sprintf(
 		`{"token":"%s", "name":"%s", "id":"%s", "isGuest":%t, "isUser":%t }`,
 		token,
-		user.Name,
-		user.Id,
-		user.IsGuest,
-		user.IsUSer)
+		sess.User.Name,
+		sess.User.Id,
+		sess.User.IsGuest,
+		sess.User.IsUSer)
 
 	utils.Debug("%s", data)
 

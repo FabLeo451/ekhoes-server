@@ -99,3 +99,14 @@ func TTL_Token() int {
 
 	return ttl
 }
+
+func TTL_EphemeralHotspots() int {
+	ttl := 5
+
+	if os.Getenv("EKHOES_TTL_EPHEMERAL_HOTSPOTS") != "" {
+		ttl, _ = strconv.Atoi(os.Getenv("EKHOES_TTL_EPHEMERAL_HOTSPOTS"))
+
+	}
+
+	return ttl
+}

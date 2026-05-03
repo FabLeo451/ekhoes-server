@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"ekhoes-server/config"
 	"ekhoes-server/db"
 )
 
@@ -274,7 +275,7 @@ func createEphemeralHotspot(hotspot Hotspot) (*Hotspot, error) {
 		panic(err)
 	}
 
-	db.SetWithTTL(key, dataStr, 5*time.Minute)
+	db.SetWithTTL(key, dataStr, time.Duration(config.TTL_EphemeralHotspots())*time.Minute)
 
 	return &hotspot, nil
 }

@@ -2,6 +2,7 @@ package herenow
 
 import (
 	"ekhoes-server/common"
+	"ekhoes-server/utils"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,21 +15,9 @@ type Query struct {
 
 func WsHandler(in common.Message, out common.Message) error {
 
-	//log.Printf("Received message of type '%s': %s\n", in.Type, in.Payload)
+	utils.Debug("Received message of type '%s': %s\n", in.Type, in.Payload)
 
 	switch in.Type {
-	/*
-		case "auth":
-			switch payload.QueryId {
-			case "loginGuest":
-				log.Println("Authorizing guest...")
-				out.Payload, _ = json.Marshal("12345")
-
-			default:
-				e := fmt.Sprintf("Unespected query: %s\n", payload.QueryId)
-				return errors.New(e)
-			}
-	*/
 	case "query":
 
 		var query Query

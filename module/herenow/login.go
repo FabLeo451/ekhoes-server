@@ -88,7 +88,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 		// Create token
 
-		token, err := auth.GenerateJWT(sessionId, user.Id, credentials.Email, user.Name, "", "", time.Time{})
+		claims := auth.CustomClaims{
+			SessionId: sessionId,
+			UserId:    user.Id,
+			Email:     credentials.Email,
+			Name:      user.Name,
+			IsUser:    true,
+			IsGuest:   false,
+		}
+
+		token, err := auth.GenerateJWT(claims, time.Time{})
 
 		if err != nil {
 			log.Println(err)

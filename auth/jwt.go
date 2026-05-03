@@ -14,27 +14,29 @@ type CustomClaims struct {
 	UserId     string `json:"userId"`
 	Email      string `json:"email"`
 	Name       string `json:"name"`
+	IsUser     bool   `json:"isUser"`
+	IsGuest    bool   `json:"isGuest"`
 	Roles      string `json:"roles"`
 	Privileges string `json:"privileges"`
 	jwt.RegisteredClaims
 }
 
-func GenerateJWT(sessionId, userId, email, name string, roles string, privileges string, expiresAt time.Time) (string, error) {
-
-	claims := CustomClaims{
-		SessionId:  sessionId,
-		UserId:     userId,
-		Email:      email,
-		Name:       name,
-		Roles:      roles,
-		Privileges: privileges,
-		RegisteredClaims: jwt.RegisteredClaims{
-			IssuedAt: jwt.NewNumericDate(time.Now()),
-			Issuer:   "websocket-server",
-			Subject:  userId,
-		},
-	}
-
+func GenerateJWT(claims CustomClaims, expiresAt time.Time) (string, error) {
+	/*
+		claims := CustomClaims{
+			SessionId:  sessionId,
+			UserId:     userId,
+			Email:      email,
+			Name:       name,
+			Roles:      roles,
+			Privileges: privileges,
+			RegisteredClaims: jwt.RegisteredClaims{
+				IssuedAt: jwt.NewNumericDate(time.Now()),
+				Issuer:   "ekhoes-server",
+				Subject:  userId,
+			},
+		}
+	*/
 	if !expiresAt.IsZero() {
 		claims.ExpiresAt = jwt.NewNumericDate(expiresAt)
 	}

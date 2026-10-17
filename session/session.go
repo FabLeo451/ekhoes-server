@@ -16,7 +16,7 @@ type User struct {
 	Roles      string `json:"roles" bson:"Roles"`
 	Privileges string `json:"privileges" bson:"Privileges"`
 	IsGuest    bool   `json:"isGuest" bson:"IsGuest"`
-	IsUSer     bool   `json:"isUSer" bson:"IsUSer"`
+	IsUser     bool   `json:"IsUser" bson:"IsUser"`
 }
 
 type Session struct {

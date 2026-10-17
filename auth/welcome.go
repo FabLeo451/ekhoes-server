@@ -21,7 +21,7 @@ func createGuestSession(moduleId string, credentials Credentials, remoteAddr str
 		Id:      utils.UUID(),
 		Name:    "Guest",
 		IsGuest: true,
-		IsUSer:  false,
+		IsUser:  false,
 	}
 
 	ses := session.Session{
@@ -167,7 +167,7 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 						UserId:    sess.User.Id,
 						Email:     credentials.Email,
 						Name:      sess.User.Name,
-						IsUser:    sess.User.IsUSer,
+						IsUser:    sess.User.IsUser,
 						IsGuest:   sess.User.IsGuest,
 					}
 
@@ -184,12 +184,12 @@ func WelcomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := fmt.Sprintf(
-		`{"token":"%s", "refreshToken":"%s", "name":"%s", "isGuest":%t, "isUser":%t }`,
+		`{"token":"%s", "refreshToken":"%s", "name":"%s", "isGuest":%t, "IsUser":%t }`,
 		token,
 		refreshToken,
 		ses.User.Name,
 		ses.User.IsGuest,
-		ses.User.IsUSer)
+		ses.User.IsUser)
 
 	utils.Debug("%s", data)
 

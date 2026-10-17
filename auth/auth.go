@@ -91,8 +91,8 @@ func HasPrivilege(privileges string, target string) bool {
 func generateAccessTokenFromSession(session session.Session) (string, error) {
 	claims := CustomClaims{
 		SessionId: session.Id,
-		IsUser:    session.User.IsUSer,
-		IsGuest:   session.User.IsUSer,
+		IsUser:    session.User.IsUser,
+		IsGuest:   session.User.IsGuest,
 	}
 
 	token, err := GenerateJWT(claims, time.Now().Add(time.Duration(config.TTL_Token())*time.Minute))
